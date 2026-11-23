@@ -316,6 +316,11 @@ that path directly, it is never truncated. Which kinds are captured defaults to 
 reapplied `{network: true, networkOptions: {categories}}` changes the switches in place without restarting,
 though an omitted key keeps its default.
 
+**A worked example**: [inspect-demo.md](inspect-demo.md) walks a live WSJ market-data page end to end —
+starting capture *before* the navigation that fires the chart request, isolating one timeseries API record out
+of 212, and reading its decoded payload back against the on-screen chart so the conclusion is a measurement
+instead of an inference.
+
 ---
 
 ## Error messages are written for the model

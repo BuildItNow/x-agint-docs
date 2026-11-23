@@ -1,0 +1,12 @@
+{
+  "method": "GET",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "bodySize": 3505,
+  "durationMs": 843.139,
+  "ttfbMs": 295.093,
+  "dnsMs": 0,
+  "connectMs": 0,
+  "downloadMs": 843.073,
+  "url": "https://api.wsj.net/api/michelangelo/timeseries/history?json={\"Step\":\"PT5M\",\"TimeFrame\":\"D5\",\"IncludeMockTick\":true,\"FilterNullSlots\":false,\"FilterClosedPoints\":true,\"IncludeClosedSlots\":false,\"IncludeOfficialClose\":true,\"InjectOpen\":false,\"ShowPreMarket\":false,\"ShowAfterHours\":false,\"UseExtendedTimeFrame\":true,\"WantPriorClose\":true,\"IncludeCurrentQuotes\":false,\"ResetTodaysAfterHoursPercentChange\":false,\"Series\":[{\"Key\":\"STOCK/US/XNAS/NVDA\",\"Dialect\":\"Charting\",\"Kind\":\"Ticker\",\"SeriesId\":\"s1\",\"DataTypes\":[\"Last\"]}]}&ckey=<REDACTED>"
+}

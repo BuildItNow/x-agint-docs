@@ -23,7 +23,8 @@ without the implementation.
 | `docs/filesystem/filesystem.md` | filesystem tool reference (16 tools) + allowlist and line-window reads |
 | `docs/browser/browser.md` | browser tool reference (33 tools) + `[N]` index model, markers, cost order |
 | `docs/browser/debugging.md` | console/network capture write-up with a real migu streaming trace |
-| `assets/flight-demo/`, `assets/migu-demo/` | The demo material: frames, GIFs, and the `steps.json` behind each |
+| `docs/browser/inspect-demo.md` | a third demo: tracing a WSJ market-data chart to its API response via capture |
+| `assets/flight-demo/`, `assets/migu-demo/`, `assets/inspect-demo/` | The demo material: frames, GIFs, and the `steps.json` behind each |
 | `scripts/make-gif.mjs` | The only script kept — composes a GIF from a `steps.json` |
 
 **56 tools total across the three servers.** Tool counts must stay in sync between the README Tools table and
@@ -143,3 +144,9 @@ BROKEN reports and wasted a cycle. If no check covers a change, **say so** rathe
    daemon, do not edit the docs to match.
 7. **`.DS_Store` is gitignored**; if one shows up in `git status`, it was tracked before the ignore rule and needs
    `git rm --cached`.
+8. **Inspect captures are deleted when the page closes.** `browser_page_close` stops capture *and deletes the
+   whole capture directory*, so read or copy the JSONL before closing — a demo written afterwards cannot recover
+   it. Commit only a filtered excerpt: raw captures carry cookies, ad identifiers and full request URLs for
+   third-party sites this repo does not own.
+9. **Start the capture channel before the action that produces the traffic.** Enabling `network` after the click
+   misses the request the click caused, and there is no retroactive capture.
