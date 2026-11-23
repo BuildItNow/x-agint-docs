@@ -18,7 +18,7 @@ without the implementation.
 
 | Path | Nature |
 |---|---|
-| `README.md` | Landing page: hero, three demo galleries (all browser-server demos), per-server overview, install, benchmarks, the Tools index, design notes |
+| `README.md` | Landing page: hero, three demo galleries (all are **browser-server demos**, grouped under the browser section), per-server overview, install, benchmarks, the Tools index, design notes |
 | `docs/bashsystem/bashsystem.md` | bashsystem tool reference (7 tools) + permission model |
 | `docs/filesystem/filesystem.md` | filesystem tool reference (16 tools) + allowlist and line-window reads |
 | `docs/browser/browser.md` | browser tool reference (33 tools) + `[N]` index model, markers, cost order; the frame-by-frame gallery section holds all three demos (flight, playlist, inspect) |
@@ -64,14 +64,20 @@ a second copy of an explanation — cross-reference instead, and refer to tools 
 
 ## 3. Asset conventions
 
-One directory per demo, self-contained:
+Two asset shapes, one directory per demo:
 
 ```
 assets/<demo>/
-├── <NN>-<slug>.jpg    Frames, named in call order so alphabetical == chronological
-├── steps.json         The tool behind each frame
-└── <demo>.gif         Assembled from the frames by scripts/make-gif.mjs
+├── <NN>-<slug>.jpg       Frames, named in call order so alphabetical == chronological
+├── steps.json            The tool behind each frame
+└── <demo>.gif            Assembled from the frames by scripts/make-gif.mjs   (acting demos only)
 ```
+
+The two *acting* demos (flight, playlist) follow the layout above — every frame is a screenshot and a GIF is
+assembled from them. The *reading* demo (`inspect-demo`) instead commits **raw capture logs as evidence**:
+`network-excerpt.jsonl` + `console-excerpt.jsonl` (contiguous slices of inspect's two per-channel JSONL logs,
+credential-redacted) plus the intermediate-state frames — no GIF. Its `steps.json` keys differ accordingly
+(`networkLog` / `consoleLog` instead of a single GIF).
 
 - **`steps.json` `image` fields are bare filenames**, resolved relative to the steps file itself — not repo-root
   paths. Keep it that way so the directory stays movable.
@@ -81,8 +87,9 @@ assets/<demo>/
   page content underneath it, which is why the strip is translucent (`BAR_HEIGHT=48`, a three-stop gradient at
   `.15 → .45 → .72`, plus text-shadow). Verify legibility by comparing the composited raw YAVG against the
   frame's, rather than trusting a screenshot.
-- GIF frame timing lives in `steps.json`; both demos use 2.2 s per frame. Regenerate with `npm run gif:flight`
-  / `npm run gif:migu` (`--steps` is required; `--out` defaults to the steps file's directory).
+- GIF frame timing lives in `steps.json`; both **acting** demos use 2.2 s per frame. Regenerate with
+  `npm run gif:flight` / `npm run gif:migu` (`--steps` is required; `--out` defaults to the steps file's
+  directory). The inspect demo has no GIF — its evidence is the two log excerpts.
 - Scratch output goes to `mkdtempSync(tmpdir())`, never into the repo.
 
 ### Relative paths depend on document depth
@@ -110,11 +117,14 @@ but break for local viewers, so check both whenever a file moves.
 There is **no CI and no test suite** in this repository; local checks are the only line of defense.
 
 ```bash
-# every asset path referenced from README must exist on disk
-grep -ohE 'assets/[A-Za-z0-9_./-]+' README.md | sort -u | while read -r f; do [ -f "$f" ] || echo "MISSING $f"; done
+# every asset path referenced from README *and* the doc pages must exist on disk
+grep -ohE 'assets/[A-Za-z0-9_./-]+' README.md docs/*/*.md | sort -u | while read -r f; do [ -e "$f" ] || echo "MISSING $f"; done
+
+# committed .jsonl evidence must parse line by line
+for f in assets/inspect-demo/*.jsonl; do python3 -c "import json,sys;[json.loads(l) for l in open(sys.argv[1])];print('ok',sys.argv[1])" "$f"; done
 
 # code fences must balance — an unbalanced fence silently swallows the rest of a section
-grep -cE '^```' README.md docs/*/*.md
+grep -cE '^```' README.md docs/*/*.md   # every count must be even
 
 node --check scripts/make-gif.mjs
 npm run gif:flight && npm run gif:migu
