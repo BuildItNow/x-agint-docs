@@ -144,44 +144,30 @@ than decorative.
 
 ### Multi-step flows across pages
 
-Searching a music site, following autocomplete, reaching the results table, starting playback:
+The same idea on other sites — searching a music site through autocomplete to the results table and
+into playback, or filling a form and reading the confirmation from the click that submitted it:
 
 <table>
 <tr>
-<td width="25%"><img src="assets/screenshots/migu-01-library.png"/></td>
-<td width="25%"><img src="assets/screenshots/migu-02-suggest.png"/></td>
-<td width="25%"><img src="assets/screenshots/migu-03-results.png"/></td>
-<td width="25%"><img src="assets/screenshots/migu-04-playing.png"/></td>
+<td width="33%"><img src="assets/screenshots/migu-02-suggest.png" alt="Search box with autocomplete suggestion offered"/></td>
+<td width="33%"><img src="assets/screenshots/migu-03-results.png" alt="Song results table after following the suggestion"/></td>
+<td width="33%"><img src="assets/screenshots/form-03-after.png" alt="Form page confirming the submission after the submit click"/></td>
 </tr>
 <tr>
-<td>library page read</td>
 <td><code>browser_page_fill</code> → autocomplete offered <code>晴天-周杰伦</code></td>
 <td><code>browser_page_click</code> → results table</td>
-<td>playing: <code>晴天 (Live)</code>, 00:02 / 04:09</td>
+<td><code>browser_page_click</code> → the page confirms it</td>
 </tr>
 </table>
 
-Watch it end to end: **[migu-play.webm](assets/demos/migu-play.webm)** ·
-**[migu-playlist.gif](assets/demos/migu-playlist.gif)** ·
-**[flights-search.webm](assets/demos/flights-search.webm)**
+Full sessions: **[migu-play.webm](assets/demos/migu-play.webm)** (search→play) ·
+**[flights-search.webm](assets/demos/flights-search.webm)** ·
+the recommended-playlist flow above as **[migu-playlist.gif](assets/demos/migu-playlist.gif)**
 
 ### Form filling, and knowing it worked
 
 The agent does not guess whether a submit succeeded — every action tool returns the page *after*
-the change, so success is read from the same call that caused it.
-
-<table>
-<tr>
-<td width="33%"><img src="assets/screenshots/form-01-before.png"/></td>
-<td width="33%"><img src="assets/screenshots/form-02-filled.png"/></td>
-<td width="33%"><img src="assets/screenshots/form-03-after.png"/></td>
-</tr>
-<tr>
-<td>form read</td>
-<td><code>browser_page_fill</code> ×2</td>
-<td><code>browser_page_click</code> → the page confirms it</td>
-</tr>
-</table>
+the change, so success is read from the same call that caused it (see the third frame above).
 
 ### Screenshots that land where you asked
 
