@@ -167,18 +167,3 @@ Two conventions that page follows, and that the demos depend on: `image` fields 
 resolved relative to the steps file (so a demo directory stays movable), and reads report `from` / `to` /
 `total` so the agent knows whether to page further instead of assuming it saw everything. The walkthroughs
 themselves are in [browser.md](../browser/browser.md).
-
----
-
-## Gotchas
-
-1. **`dist/index.js` is a library barrel, not an entry point** — importing it never starts a server, so a
-   launcher pointed there hangs the handshake. The executable is `dist/bin/x-filesystem.js`.
-2. **Do not pass directories as positional arguments** to the CLI; they are ignored. Use `--config-path`
-   and config keys.
-3. **`search_text` needs ripgrep resolvable at runtime** — `@vscode/ripgrep` is deliberately *not* bundled,
-   because it locates its own installation directory, which a static bundle breaks.
-4. **Config edits apply only on restart**, then probe the live channel with one allowed path and one
-   refused path — do not trust the file edit.
-5. **A temp `HOME` in tests must contain `~/x-works`** — that directory is in the allowlist by default, and
-   an allowlisted directory that does not exist makes the server report *working directory not accessible*.

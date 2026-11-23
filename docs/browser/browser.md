@@ -370,15 +370,5 @@ for a tool that does not exist.
 
 ## Gotchas
 
-1. **The daemon is long-lived and keeps the catalog from the build it started with.** If an old daemon is
-   still running, you are exercising *that* catalog — a report naming tools that no longer exist in source is
-   an environment problem, not a code problem.
-2. **`--daemon stop` never stops the browser server, by design.** The detached `--serve` process outlives its
-   daemon and reparents to PID 1, keeping Chromium alive; once its temp home is deleted nothing records its
-   pid. Any cleanup must issue `--server stop` as well.
-3. **Output markers like `[VIEWPORT]` are part of the external contract** — changing them changes the output
-   format, and test assertions (including escaped regex forms) with it.
-4. **`playwright` is a runtime dependency, never bundled**: it resolves its own installation directory to find
-   the browser binary and loads native modules, both of which a static bundle breaks.
-5. **This package is deliberately self-contained** — no cross-package `tsconfig` inheritance, so it can be moved
-   out of the monorepo and compiled standalone.
+- **Output markers like `[VIEWPORT]` are part of the external contract** — they appear in every page read this
+  repo documents, so changing one changes the output format and every example that quotes it.
