@@ -223,5 +223,3 @@ children behind. The frame-by-frame walkthroughs are in [browser.md](../browser/
 4. **A command containing blocked *text* can be refused even in a heredoc.** The guard inspects the whole
    command line, so writing a script that mentions `rm -rf` inside a `cat <<EOF` may trip it. Write the
    file with the filesystem tools instead.
-5. **Stop a service with `pm2 delete`, not `pm2 stop`** — `stop` leaves it registered and collides with the
-   next start.
