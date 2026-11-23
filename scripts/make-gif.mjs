@@ -23,13 +23,14 @@
  *
  * Usage:
  *   node scripts/make-gif.mjs --steps assets/flight-demo/steps.json \
- *                             --out assets/demos/flight-booking.gif
- * steps.json: [{ "image": "../flight-demo/flight-01-form.jpg", "tool": "browser_page_open" }, ...]
+ *                             --out assets/flight-demo/flight-booking.gif
+ * steps.json: [{ "image": "flight-01-form.jpg", "tool": "browser_page_open" }, ...]
  *
  * `--steps` is required: the steps file names both the frames and the tool behind each one, so
  * there is no sensible default to fall back on.
  */
-import { mkdirSync, readFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, basename, join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -196,13 +197,15 @@ async function main() {
         process.exit(1);
     }
     const stepsPath = resolve(stepsArg);
-    const out = resolve(flag('out', join(ASSETS, 'demos', `${basename(dirname(stepsPath))}.gif`)));
+    // Default output sits beside the steps file, so each demo keeps its GIF next to its frames
+    // instead of in a shared demos/ directory that mixes unrelated flows.
+    const out = resolve(flag('out', join(dirname(stepsPath), `${basename(dirname(stepsPath))}.gif`)));
     if (!existsSync(stepsPath)) { console.error(`no steps file at ${stepsPath}`); process.exit(1); }
     const steps = JSON.parse(readFileSync(stepsPath, 'utf8'));
 
-    const work = join(ASSETS, 'demos', '.gif-work');
-    rmSync(work, { recursive: true, force: true });
-    mkdirSync(work, { recursive: true });
+    // Scratch lives in the system temp dir, not under assets/, so a run cannot leave debris next
+    // to committed frames (and cannot recreate a directory the repo no longer keeps).
+    const work = mkdtempSync(join(tmpdir(), 'x-agint-gif-'));
 
     // One caption strip per distinct tool name; reusing them avoids re-rendering text.
     const capPaths = await renderCaptions([...new Set(steps.map((s) => s.tool))], work);

@@ -44,7 +44,7 @@ A flight booking site is not a static document — the agent has to drive it. Th
 captured live through the MCP tools; each frame below **is** one tool call's screenshot, written by
 that same call (`filePath`), so the image and the tool log come from the same action.
 
-![flight booking flow](assets/demos/flight-booking.gif)
+![flight booking flow](assets/flight-demo/flight-booking.gif)
 
 <table>
 <tr>
@@ -106,7 +106,7 @@ coordinate system**: the `[N]` index the agent read at is the same index it clic
 Same capture method on a music site: open the library, *choose* from what the page recommends, then
 play it. Each frame is one tool call's own screenshot.
 
-![recommended playlist flow](assets/demos/migu-playlist.gif)
+![recommended playlist flow](assets/migu-demo/migu-playlist.gif)
 
 <table>
 <tr>
@@ -165,8 +165,8 @@ The GIFs are assembled by [`scripts/make-gif.mjs`](scripts/make-gif.mjs) from a 
 the tool behind each frame, so both demos regenerate end to end:
 
 ```bash
-node scripts/make-gif.mjs --steps assets/flight-demo/steps.json --out assets/demos/flight-booking.gif
-node scripts/make-gif.mjs --steps assets/migu-demo/steps.json  --out assets/demos/migu-playlist.gif
+node scripts/make-gif.mjs --steps assets/flight-demo/steps.json --out assets/flight-demo/flight-booking.gif
+node scripts/make-gif.mjs --steps assets/migu-demo/steps.json  --out assets/migu-demo/migu-playlist.gif
 ```
 
 The caption strip is rendered in a browser and composited with `overlay` — this ffmpeg build has no

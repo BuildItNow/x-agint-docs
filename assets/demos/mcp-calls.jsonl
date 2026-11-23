@@ -1,7 +1,0 @@
-{"at":1795407454188,"label":"Open a real page","tool":"browser_page_open","ok":true,"args":{"url":"https://en.wikipedia.org/wiki/Model_Context_Protocol"}}
-{"at":1795407457740,"label":"Read the viewport as an indexed tree","tool":"browser_get_viewport_content","ok":true,"args":{"id":"edd391ad-a8a0-48ca-9d00-eaa2343c94be","count":24}}
-{"at":1795407461434,"label":"Search inside the page","tool":"browser_page_search","ok":true,"args":{"id":"edd391ad-a8a0-48ca-9d00-eaa2343c94be","text":"transport"}}
-{"at":1795407464938,"label":"Scroll down","tool":"browser_page_scroll","ok":true,"args":{"id":"edd391ad-a8a0-48ca-9d00-eaa2343c94be","yDirection":"down"}}
-{"at":1795407470445,"label":"Read the viewport again","tool":"browser_get_viewport_content","ok":true,"args":{"id":"edd391ad-a8a0-48ca-9d00-eaa2343c94be","count":24}}
-{"at":1795407474132,"label":"Take a screenshot for the model","tool":"browser_page_screenshot_for_llm","ok":true,"args":{"id":"edd391ad-a8a0-48ca-9d00-eaa2343c94be"}}
-{"at":1795407476909,"label":"Close the page","tool":"browser_page_close","ok":true,"args":{"id":"edd391ad-a8a0-48ca-9d00-eaa2343c94be"}}

@@ -49,19 +49,24 @@ which looks like a wrong token when the token was fine.
 
 ---
 
-## Reading a real tool-result trace
+## Reading a real tool-call trace
 
-`assets/demos/mcp-calls.jsonl` holds a captured 7-call browser session, one JSON object per call:
+Both README demos are driven through MCP, and each frame's tool is recorded in its `steps.json`
+(`assets/flight-demo/steps.json`, `assets/migu-demo/steps.json`). The playlist demo's call chain, with
+the evidence each call returned:
 
 ```jsonc
-{"tool":"browser_page_open",              "ok":true, "args":{"url":"https://en.wikipedia.org/wiki/Model_Context_Protocol"}}
-{"tool":"browser_get_viewport_content",  "ok":true, "args":{"id":"edd391ad-…","count":24}}
-{"tool":"browser_page_search",           "ok":true, "args":{"id":"edd391ad-…","text":"transport"}}
-{"tool":"browser_page_scroll",           "ok":true, "args":{"id":"edd391ad-…","yDirection":"down"}}
-{"tool":"browser_get_viewport_content",  "ok":true, "args":{"id":"edd391ad-…","count":24}}
-{"tool":"browser_page_screenshot_for_llm","ok":true,"args":{"id":"edd391ad-…"}}
-{"tool":"browser_page_close",            "ok":true, "args":{"id":"edd391ad-…"}}
+// browser_page_open   -> 乐库 home; the read lists recommended playlists WITH play counts
+//                        196.6万 / 305.0万 / 84.1万 / 198.6万 …
+// browser_page_click [302]  -> URL becomes #/playlist?playlistId=227616725, list reports 共161首
+// browser_page_search "播放全部" -> one hit: [912]<span class="active"> 播放全部
+// browser_page_click [912]  -> time: 00:01 / 04:40
+//                             <tr class="el-table__row playing-row">   ← row 01 marked
+//                             title="暂停"                             ← button flipped to pause
+// browser_page_click [798] 下一首 -> playing-row moves to row 02,
+//                                    song-name: 单身情歌 / singers: 林志炫, 00:02 / 04:35
 ```
 
-Steps sit ~2.8 s apart. Note the shape: `read → search → scroll → read`. The agent never re-reads the whole
-page — it narrows.
+Note the shape: **locate by visible text → act on the returned `[N]` → read the change from the same
+call's return**. The agent never re-reads the whole page — it narrows. And a pause is proven by the
+*absence* of `playing-row` plus a frozen timestamp, not by assuming the button worked.

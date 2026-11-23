@@ -1,6 +1,6 @@
 [
-  { "image": "../migu-demo/migu-01-library.jpg", "tool": "browser_page_open" },
-  { "image": "../migu-demo/migu-02-playlist.jpg", "tool": "browser_page_click" },
-  { "image": "../migu-demo/migu-03-playing.jpg", "tool": "browser_page_click" },
-  { "image": "../migu-demo/migu-04-next.jpg", "tool": "browser_page_click" }
+  { "image": "migu-01-library.jpg", "tool": "browser_page_open" },
+  { "image": "migu-02-playlist.jpg", "tool": "browser_page_click" },
+  { "image": "migu-03-playing.jpg", "tool": "browser_page_click" },
+  { "image": "migu-04-next.jpg", "tool": "browser_page_click" }
 ]
