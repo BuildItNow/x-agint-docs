@@ -38,9 +38,49 @@ Cursor, Cline, or your own agent host).
 ## What an agent actually does with them
 
 These are **browser-server demos** — every capture in this repository is driven by `@x-agint/browser` (see the
-[browser](#browser) section). A flight booking site is not a static document — the agent has to drive it. This
-sequence was captured live through the MCP tools; each frame below **is** one tool call's screenshot, written by
-that same call (`filePath`), so the image and the tool log come from the same action.
+[browser](#browser) section). None of these targets is a static document — the agent has to drive it. Each demo
+below was captured live through the MCP tools; each frame **is** one tool call's screenshot, written by that same
+call (`filePath`), so the image and the tool log come from the same action.
+
+### Publish a repository to GitHub — driving a real product UI
+
+The first demo drives a logged-in product rather than a public page: create an empty repo and push
+the existing local history. Same capture method — each frame is one tool call's own screenshot (`filePath`),
+named in call order. The agent stops short of anything irreversible beyond the repo itself; it never touches
+billing or deletes anything.
+
+![publish to GitHub flow](assets/github-demo/publish-to-github.gif)
+
+<table>
+<tr>
+<td width="33%"><img src="assets/github-demo/gh-01-home.jpg" alt="GitHub dashboard, signed in as BuildItNow: Home pinned, Join GitHub Education banner, Good afternoon greeting"/></td>
+<td width="33%"><img src="assets/github-demo/gh-02-create-menu.jpg" alt="The top-bar plus menu open: New issue, New repository, Import repository, New codespace, gist, organization, project"/></td>
+<td width="34%"><img src="assets/github-demo/gh-04-named.jpg" alt="Create-repository form with x-agint-docs typed and the green 'x-agint-docs is available.' check; Owner BuildItNow, visibility Public"/></td>
+</tr>
+<tr>
+<td><code>browser_page_open</code> → <code>github.com/</code>; signed in as <code>BuildItNow</code></td>
+<td><code>browser_page_click</code> [55] the create “+” menu → <code>New repository</code> item appears</td>
+<td><code>browser_page_fill</code> [130] "x-agint-docs" → return reports <code>x-agint-docs is available.</code></td>
+</tr>
+<tr>
+<td width="33%"><img src="assets/github-demo/gh-03-form.jpg" alt="Empty Create-a-new-repository form: Owner BuildItNow, empty name field, Public selected, README/gitignore/license off"/></td>
+<td width="33%"><img src="assets/github-demo/gh-05-created.jpg" alt="Empty repo page BuildItNow/x-agint-docs, Public, with the Quick setup remote URL and the 'push an existing repository' git commands"/></td>
+<td width="34%"><img src="assets/github-demo/gh-06-pushed.jpg" alt="Same repo after push: file tree (.agents, assets, docs, scripts, README.md, package.json…), HEAD at f4a843f, README rendered"/></td>
+</tr>
+<tr>
+<td><code>browser_page_click</code> [468] New repository → navigate to <code>/new</code></td>
+<td><code>browser_page_open</code> the repo URL → Quick setup shows <code>…/x-agint-docs.git</code></td>
+<td><code>git push -u origin main</code> then <code>browser_page_reload</code> → tree at <code>f4a843f</code></td>
+</tr>
+</table>
+
+The interesting part is the **fill return**, not the screenshot: typing the name makes GitHub answer
+`x-agint-docs is available.` in the same change set (`NODE_ADDED`), so availability is confirmed from the tool
+result rather than by eye. The create click then leaves the page momentarily unresponsive (the form POST runs a
+long script); `browser_page_close` reports the tab had already navigated to
+`github.com/BuildItNow/x-agint-docs` — that URL, not a claim, is the proof the repo exists. The push itself is a
+plain `git remote add origin … && git push -u origin main`; GitHub's own Quick-setup panel prints those exact
+commands on the empty-repo page (frame 5).
 
 ### Book a flight — read, then act on what it read
 
@@ -144,7 +184,7 @@ than decorative.
 
 ### Read the XHR behind a number — debugging a market page
 
-The first two demos *act* on a page. This one *reads what the page does not expose*: which interface call
+The three demos above all *act* on a page. This one *reads what the page does not expose*: which interface call
 feeds a number, and its exact return. The sequence is open → start capture → act → read the logs; each frame is
 the page state at that step, and inspect writes **two separate logs** (network and console).
 
@@ -193,49 +233,9 @@ page actually did.
 Full write-up (the two raw logs, the inline-vs-externalized threshold, why this site was chosen):
 **[docs/browser/inspect-demo.md](docs/browser/inspect-demo.md)**.
 
-### Publish a repository to GitHub — driving a real product UI
-
-The third demo acts again, but on a logged-in product rather than a public page: create an empty repo and push
-the existing local history. Same capture method — each frame is one tool call's own screenshot (`filePath`),
-named in call order. The agent stops short of anything irreversible beyond the repo itself; it never touches
-billing or deletes anything.
-
-![publish to GitHub flow](assets/github-demo/publish-to-github.gif)
-
-<table>
-<tr>
-<td width="33%"><img src="assets/github-demo/gh-01-home.jpg" alt="GitHub dashboard, signed in as BuildItNow: Home pinned, Join GitHub Education banner, Good afternoon greeting"/></td>
-<td width="33%"><img src="assets/github-demo/gh-02-create-menu.jpg" alt="The top-bar plus menu open: New issue, New repository, Import repository, New codespace, gist, organization, project"/></td>
-<td width="34%"><img src="assets/github-demo/gh-04-named.jpg" alt="Create-repository form with x-agint-docs typed and the green 'x-agint-docs is available.' check; Owner BuildItNow, visibility Public"/></td>
-</tr>
-<tr>
-<td><code>browser_page_open</code> → <code>github.com/</code>; signed in as <code>BuildItNow</code></td>
-<td><code>browser_page_click</code> [55] the create “+” menu → <code>New repository</code> item appears</td>
-<td><code>browser_page_fill</code> [130] "x-agint-docs" → return reports <code>x-agint-docs is available.</code></td>
-</tr>
-<tr>
-<td width="33%"><img src="assets/github-demo/gh-03-form.jpg" alt="Empty Create-a-new-repository form: Owner BuildItNow, empty name field, Public selected, README/gitignore/license off"/></td>
-<td width="33%"><img src="assets/github-demo/gh-05-created.jpg" alt="Empty repo page BuildItNow/x-agint-docs, Public, with the Quick setup remote URL and the 'push an existing repository' git commands"/></td>
-<td width="34%"><img src="assets/github-demo/gh-06-pushed.jpg" alt="Same repo after push: file tree (.agents, assets, docs, scripts, README.md, package.json…), HEAD at f4a843f, README rendered"/></td>
-</tr>
-<tr>
-<td><code>browser_page_click</code> [468] New repository → navigate to <code>/new</code></td>
-<td><code>browser_page_open</code> the repo URL → Quick setup shows <code>…/x-agint-docs.git</code></td>
-<td><code>git push -u origin main</code> then <code>browser_page_reload</code> → tree at <code>f4a843f</code></td>
-</tr>
-</table>
-
-The interesting part is the **fill return**, not the screenshot: typing the name makes GitHub answer
-`x-agint-docs is available.` in the same change set (`NODE_ADDED`), so availability is confirmed from the tool
-result rather than by eye. The create click then leaves the page momentarily unresponsive (the form POST runs a
-long script); `browser_page_close` reports the tab had already navigated to
-`github.com/BuildItNow/x-agint-docs` — that URL, not a claim, is the proof the repo exists. The push itself is a
-plain `git remote add origin … && git push -u origin main`; GitHub's own Quick-setup panel prints those exact
-commands on the empty-repo page (frame 5).
-
 ### Why every action returns the page it changed
 
-The first two demos above are also the verification story: the agent never has to guess whether a click
+The flight and playlist demos above are also the verification story: the agent never has to guess whether a click
 worked, because each action tool returns the page *after* the change. That is why the playlist demo
 can prove a pause (the `playing-row` class disappears and the timestamp freezes) rather than assume
 one, and why the flight demo can confirm the sort direction from a column title instead of trusting
@@ -359,16 +359,15 @@ by that same call (`filePath`), so the image and the tool log cannot disagree:
 
 | Demo | What it shows | Frames + `steps.json` |
 |---|---|---|
+| **Publish to GitHub** | drive a logged-in product UI end-to-end: create repo, fill form, push (GitHub) | [`assets/github-demo/`](assets/github-demo/) |
 | **Book a flight** | read → choose → act on one `[N]` index space (Fliggy) | [`assets/flight-demo/`](assets/flight-demo/) |
 | **Play a playlist** | pick the most-played recommendation, prove playback by return values (Migu) | [`assets/migu-demo/`](assets/migu-demo/) |
 | **Debug a market page** | read the inline XHR + console behind a number (`browser_page_inspect`, two logs) | [`assets/inspect-demo/`](assets/inspect-demo/) |
-| **Publish to GitHub** | drive a logged-in product UI end-to-end: create repo, fill form, push (GitHub) | [`assets/github-demo/`](assets/github-demo/) |
 
-The first two are walked through in full **[What an agent actually does with them](#what-an-agent-actually-does-with-them)**;
-the third is the inspect trace in **[Debugging what the page cannot show you](#debugging-what-the-page-cannot-show-you)**
-and **[docs/browser/inspect-demo.md](docs/browser/inspect-demo.md)**; the fourth (publish to GitHub) is in
-**[What an agent actually does with them](#publish-a-repository-to-github--driving-a-real-product-ui)**. The same
-galleries are mirrored on the reference page: **[docs/browser/browser.md](docs/browser/browser.md)**.
+The first three are walked through in full **[What an agent actually does with them](#what-an-agent-actually-does-with-them)**
+(leading with **publish to GitHub**); the inspect trace is also in **[Debugging what the page cannot show
+you](#debugging-what-the-page-cannot-show-you)** and **[docs/browser/inspect-demo.md](docs/browser/inspect-demo.md)**.
+The same galleries are mirrored on the reference page: **[docs/browser/browser.md](docs/browser/browser.md)**.
 
 A page read returns a tree of nodes, each with a stable `[N]` index and markers describing what the
 node *is*:
