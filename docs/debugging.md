@@ -112,4 +112,3 @@ inside the server's allowed directories; relative paths are refused. Omit it and
 That is what makes documentation self-generating: every frame of both README demos was written by the
 tool call whose effect the frame shows, so the image and the tool log cannot disagree. No separate
 recorder, no second session against the same page.
-
