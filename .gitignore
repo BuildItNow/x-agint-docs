@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+assets/.capture-profile/
+assets/demos/page@*.webm
+/tmp/
+*.log

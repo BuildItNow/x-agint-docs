@@ -1,0 +1,16 @@
+{
+  "name": "x-agint-docs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Asset capture and demo scripts for the x-agint MCP documentation site. Contains no server source.",
+  "scripts": {
+    "capture": "node scripts/capture-assets.mjs",
+    "demo": "node scripts/mcp-demo.mjs",
+    "gif": "node scripts/make-gif.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "gifenc": "^1.0.3"
+  }
+}
