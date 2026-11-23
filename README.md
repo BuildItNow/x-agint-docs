@@ -11,7 +11,7 @@
   <a href="#browser">browser</a> ·
   <a href="#install">install</a> ·
   <a href="#benchmarks">benchmarks</a> ·
-  <a href="docs/tools.md">all tools</a>
+  <a href="#tools">all tools</a>
 </p>
 
 ---
@@ -20,10 +20,9 @@ Every screenshot and video in this repository was captured from a **real website
 — no mockups, no fixtures. The flight prices are quotes the site actually returned; the song is
 actually playing.
 
-Each server's full tool reference lives beside this README:
+Each server's full tool reference lives in `docs/`, one directory per server:
 **[bashsystem](docs/bashsystem/bashsystem.md)** · **[filesystem](docs/filesystem/filesystem.md)** ·
-**[browser](docs/browser/browser.md)**, with the combined index in
-**[docs/tools.md](docs/tools.md)**.
+**[browser](docs/browser/browser.md)**. The combined index is the [Tools](#tools) section below.
 
 | | |
 |---|---|
@@ -192,7 +191,8 @@ one, refused otherwise. That holds for forms a regex cannot express:
 ```bash
 { rm -rf /etc; }        # refused — command boundary detected
 ( rm -rf /usr )         # refused
-if true; then rm -rf /  # refused
+if true; then rm -rf /  # refused — control keyword starts a command
+for f in x; do rm "$f"; done   # refused — the payload after `do` is judged
 env X=1 rm -rf /var     # refused — exec wrappers unwrapped to the real command
 ```
 
@@ -363,8 +363,8 @@ The allowlist is enforced **on the machine the server runs on**. Nothing a clien
 
 ## Benchmarks
 
-Measured on this host, not marketing numbers. Method and per-task breakdown:
-**[docs/benchmarks.md](docs/benchmarks.md)**.
+Measured on this host, not marketing numbers — one benchmark suite over these three servers, running
+representative tasks against live websites.
 
 | | |
 |---|---|
@@ -376,6 +376,74 @@ Measured on this host, not marketing numbers. Method and per-task breakdown:
 
 The token figure is the honest one to read: MCP tools are text-heavy, and a page read costs real
 tokens. That is *why* the read tools are windowed and cost-ordered rather than dumping pages.
+
+---
+
+## Tools
+
+Every tool listed in the per-server docs was read from a **running server** via MCP `tools/list` — not
+copied from documentation. Signatures use `name(arg, opt?)`: required args first, optional marked `?`.
+
+| Server | Tools | Doc |
+|---|---|---|
+| [`bashsystem`](docs/bashsystem/bashsystem.md) | **7** | permission model: hard blocks vs configurable blocks vs the sudo allowlist; why `rm` is an allowlist check and not a pattern |
+| [`filesystem`](docs/filesystem/filesystem.md) | **16** | the path allowlist, and line-window reads where `offset: -50` means "last 50 lines" |
+| [`browser`](docs/browser/browser.md) | **33** | the `[N]` index model, marker blocks, and the cost order for reading a page |
+
+**56 tools total.**
+
+### Why per-package docs instead of one flat list
+
+The three servers share almost nothing at the interface level. `bashsystem`'s interesting content is its
+permission model; `filesystem`'s is path validation and line windows; `browser`'s is a node-index model
+and a cost ordering that decides which of 33 tools to call. A single flat list would flatten exactly the
+parts that need explaining.
+
+### Verifying a catalog yourself
+
+The three servers expose `tools/list` over Streamable HTTP, so the authoritative list is one request away:
+
+```bash
+x-browser --server status          # prints its url, e.g. http://127.0.0.1:3007/mcp
+
+x-filesystem --config-path ~/.x-agint/filesystem/config.json --server start
+x-bashsystem --server start
+```
+
+Any MCP client works. If you script it with the official SDK, note that the auth header must ride on
+**every** request (POST, the SSE GET, and DELETE):
+
+```js
+const transport = new StreamableHTTPClientTransport(new URL(url), {
+    requestInit: { headers: { 'X-MCP-Endpoint': token } },   // not `fetchImpl` — that key is ignored
+});
+```
+
+Passing a made-up option name is silently accepted, the header never goes out, and the server answers 401
+— which looks like a wrong token when the token was fine.
+
+### Reading a real tool-call trace
+
+Both demos above are driven through MCP, and each frame's tool is recorded in its `steps.json`
+([`assets/flight-demo/steps.json`](assets/flight-demo/steps.json),
+[`assets/migu-demo/steps.json`](assets/migu-demo/steps.json)). The playlist demo's call chain, with the
+evidence each call returned:
+
+```jsonc
+// browser_page_open   -> 乐库 home; the read lists recommended playlists WITH play counts
+//                        196.6万 / 305.0万 / 84.1万 / 198.6万 …
+// browser_page_click [302]  -> URL becomes #/playlist?playlistId=227616725, list reports 共161首
+// browser_page_search "播放全部" -> one hit: [912]<span class="active"> 播放全部
+// browser_page_click [912]  -> time: 00:01 / 04:40
+//                             <tr class="el-table__row playing-row">   ← row 01 marked
+//                             title="暂停"                             ← button flipped to pause
+// browser_page_click [798] 下一首 -> playing-row moves to row 02,
+//                                    song-name: 单身情歌 / singers: 林志炫, 00:02 / 04:35
+```
+
+Note the shape: **locate by visible text → act on the returned `[N]` → read the change from the same
+call's return**. The agent never re-reads the whole page — it narrows. And a pause is proven by the
+*absence* of `playing-row` plus a frozen timestamp, not by assuming the button worked.
 
 ---
 

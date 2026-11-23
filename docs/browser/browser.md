@@ -164,6 +164,127 @@ operating instructions mid-session.
 
 ---
 
+## What these tools actually did, frame by frame
+
+Both galleries below were captured **through these tools**, and every frame is one tool call's own
+screenshot: the same call that acted on the page wrote the file via its `filePath` argument. So the image
+and the tool log cannot disagree — there was no separate screen recorder.
+
+### Booking a flight: read, choose, act
+
+![flight booking flow](../../assets/flight-demo/flight-booking.gif)
+
+<table>
+<tr>
+<td width="25%"><img src="../../assets/flight-demo/flight-01-form.jpg" alt="Fliggy flight form: Beijing to Hangzhou, 2026-11-24"/></td>
+<td width="25%"><img src="../../assets/flight-demo/flight-02-results.jpg" alt="Result list: 47 flights with times, airports, on-time rate and price"/></td>
+<td width="25%"><img src="../../assets/flight-demo/flight-03-filters.jpg" alt="Departure-time filter dropdown opened by the agent"/></td>
+<td width="25%"><img src="../../assets/flight-demo/flight-04-filtered.jpg" alt="List narrowed to morning departures after the filter was checked"/></td>
+</tr>
+<tr>
+<td><code>browser_page_open</code> — form prefilled 北京 → 杭州, 2026-11-24</td>
+<td><code>browser_page_click</code> on 搜索机票 → a new tab with the flight list</td>
+<td><code>browser_page_search</code> then <code>click</code> → 起飞时段 dropdown</td>
+<td><code>browser_page_click</code> on 上午 (00:00-11:59) → list narrows to 07:25–11:30 departures</td>
+</tr>
+<tr>
+<td width="25%"><img src="../../assets/flight-demo/flight-05-afternoon.jpg" alt="Afternoon filter selected, morning cleared"/></td>
+<td width="25%"><img src="../../assets/flight-demo/flight-06-cheapest.jpg" alt="Price-sorted ascending: Xiamen Air MF8150 at 260 yuan is the cheapest afternoon flight"/></td>
+<td width="25%"><img src="../../assets/flight-demo/flight-07-selected.jpg" alt="Fare panel expanded for the cheapest fare"/></td>
+<td width="25%"><img src="../../assets/flight-demo/flight-08-login.jpg" alt="Booking click lands on the login wall with the order-confirm URL in redirectURL"/></td>
+</tr>
+<tr>
+<td><code>browser_page_click</code> — swap 上午 off, 下午 (12:00-17:59) on</td>
+<td><code>browser_page_click</code> on the price column → ascending; first row ¥260</td>
+<td><code>browser_read_element_children [5340]</code> → the exact <code>&lt;button aria-label="预订"></code></td>
+<td><code>browser_page_click</code> that button → order page, behind login</td>
+</tr>
+</table>
+
+The whole flow runs on **one index space**. `browser_page_search("搜索机票")` returns a single hit at
+`[149]`, and clicking `[149]` opens the results tab; checking 上午 removes 47 rows and re-renders only
+morning departures, which the click return reports as `NODE_REMOVED` / `NODE_ADDED` instead of leaving the
+agent to guess. Sorting by price is confirmed from the column title flipping to 「点击按票价从高到低」 — not
+from assuming the click worked — and reading the rows one at a time gives the comparison the agent then
+chooses from:
+
+| Afternoon flight | Price | Seats |
+|---|---|---|
+| **厦航 MF8150** 13:10→15:20 大兴/萧山T3 | **¥260 (1.2折)** | 3张 |
+| 东航 MU5147 12:20 | ¥300 | 少量 |
+| 南航 CZ8627 12:25 | ¥300 | 少量 |
+| 东航 MU5191 14:00 | ¥300 | 少量 |
+
+MF8150 is the cheapest **and** a full-service carrier (the expanded fare panel says 航司直营 ·
+托运行李20公斤), and `browser_read_element_children [5340]` names the exact control
+`[5369]<button aria-label="预订">`. Clicking it navigates to
+`fbuy.fliggy.com/travel/confirm_order.htm?…bizType=flight…quantity:1`, wrapped in a login redirect — no
+credentials are held here, so the agent gets the flow started and stops there.
+
+One gotcha that cost a retry: Fliggy's filter checkboxes are `<li>` elements styled to look like tickers.
+`browser_page_uncheck` refuses them (*"Not a checkbox"*) because they really are not — the working move is a
+plain `browser_page_click` on the row.
+
+Frame-by-frame arguments and returns:
+[`assets/flight-demo/steps.json`](../../assets/flight-demo/steps.json).
+
+### Playing a recommended playlist: picking, not just pressing
+
+![recommended playlist flow](../../assets/migu-demo/migu-playlist.gif)
+
+<table>
+<tr>
+<td width="25%"><img src="../../assets/migu-demo/migu-01-library.jpg" alt="Migu music library home with the recommended-playlist carousel"/></td>
+<td width="25%"><img src="../../assets/migu-demo/migu-02-playlist.jpg" alt="Playlist detail page with 161 tracks and a play-all button"/></td>
+<td width="25%"><img src="../../assets/migu-demo/migu-03-playing.jpg" alt="First track playing, progress bar running and the row marked as playing"/></td>
+<td width="25%"><img src="../../assets/migu-demo/migu-04-next.jpg" alt="Second track playing after next, the playing marker moved to that row"/></td>
+</tr>
+<tr>
+<td><code>browser_page_open</code> — 乐库 home: a **推荐歌单** carousel with playlists and play counts</td>
+<td><code>browser_page_click</code> on the cover title → <code>#/playlist?playlistId=227616725</code>, **共161首**</td>
+<td><code>browser_page_click</code> on <code>[912] 播放全部</code> → playing, <code>00:01 / 04:40</code></td>
+<td><code>browser_page_click</code> on <code>[798] 下一首</code> → track 02, <code>00:02 / 04:35</code></td>
+</tr>
+</table>
+
+The choice comes out of the read: the home page lists the recommended playlists **with their play counts**
+(`196.6万`, `305.0万`, `84.1万`, `198.6万`), so the agent takes the most-played one — 【华语怀旧向】80后的青春旧唱片
+— rather than whatever happens to be first.
+
+And no step has to trust a click, because each action returns the page it changed:
+
+```text
+click [912] 播放全部  ->  time: 00:01 / 04:40
+                        <tr class="el-table__row playing-row">   ← row 01 marked
+                        title="暂停"                             ← button flipped to pause
+click [4783] (pause)  ->  playing-row removed, title="播放", time frozen at 00:15
+click [798] 下一首     ->  playing-row now on row 02
+                        song-name: 单身情歌 / singers: 林志炫, 00:02 / 04:35
+```
+
+A pause is proven by the **absence** of the playing marker and a frozen timestamp. That round trip
+(play → pause → resume → next) is what makes the demo verifiable rather than decorative.
+
+Frame-by-frame arguments and returns:
+[`assets/migu-demo/steps.json`](../../assets/migu-demo/steps.json).
+
+### Regenerating both GIFs
+
+The animations are assembled from the same frames by
+[`scripts/make-gif.mjs`](../../scripts/make-gif.mjs), from a `steps.json` that names the tool behind each
+frame:
+
+```bash
+node scripts/make-gif.mjs --steps assets/flight-demo/steps.json --out assets/flight-demo/flight-booking.gif
+node scripts/make-gif.mjs --steps assets/migu-demo/steps.json  --out assets/migu-demo/migu-playlist.gif
+```
+
+The caption strip is rendered in a browser and composited with `overlay` — this ffmpeg build has no
+`drawtext`/`ass`/`subtitles`, so text cannot be drawn by a filter. It stays translucent because a solid bar
+hid the page content underneath it, and it names the tool only: arguments are long and belong in prose.
+
+---
+
 ## Debugging a page that misbehaves
 
 `browser_page_inspect` reads what the rendered page cannot tell you: a console error, what an interface

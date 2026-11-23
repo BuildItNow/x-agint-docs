@@ -193,6 +193,24 @@ Hard-won rules:
 
 ---
 
+## See the same calls in the demos
+
+The browser demos at [`assets/flight-demo/`](../../assets/flight-demo/) and
+[`assets/migu-demo/`](../../assets/migu-demo/) were driven through MCP, and every frame names the tool that
+produced it in its `steps.json`. Those flows lean on `bashsystem_execute_command` for everything around the
+page work — the GIF assembly behind both animations is one command per demo:
+
+```bash
+npm run gif:flight   # node scripts/make-gif.mjs --steps assets/flight-demo/steps.json --out …
+npm run gif:migu
+```
+
+The `background: true` contract above is what a long-running capture or a resident server needs, and the
+foreground process-group rule is why an interrupted capture does not leave orphaned ffmpeg or Chromium
+children behind. The frame-by-frame walkthroughs are in [browser.md](../browser/browser.md).
+
+---
+
 ## Gotchas
 
 1. **`dist/index.js` is a library barrel, not an entry point.** Importing it has no side effects and never

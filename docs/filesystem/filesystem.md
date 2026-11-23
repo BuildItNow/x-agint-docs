@@ -151,6 +151,25 @@ so profiles never collide.
 
 ---
 
+## See the same calls in the demos
+
+The demo material under [`assets/flight-demo/`](../../assets/flight-demo/) and
+[`assets/migu-demo/`](../../assets/migu-demo/) is all written and read back through these tools. Each frame
+is saved by the very call that produced it — a screenshot tool passed a `filePath` inside the allowed
+directories — and the per-frame record beside it is a plain JSON file:
+
+```jsonc
+filesystem_read_text_file({ "path": "assets/migu-demo/steps.json", "tryFullRead": true })
+// -> { content, from: 1, to: 26, total: 26 }   ← the tool behind each frame, in call order
+```
+
+Two conventions that page follows, and that the demos depend on: `image` fields are **bare filenames**
+resolved relative to the steps file (so a demo directory stays movable), and reads report `from` / `to` /
+`total` so the agent knows whether to page further instead of assuming it saw everything. The walkthroughs
+themselves are in [browser.md](../browser/browser.md).
+
+---
+
 ## Gotchas
 
 1. **`dist/index.js` is a library barrel, not an entry point** — importing it never starts a server, so a
