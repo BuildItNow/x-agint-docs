@@ -5,9 +5,9 @@ documentation. Signatures use `name(arg, opt?)`: required args first, optional m
 
 | Server | Tools | Doc |
 |---|---|---|
-| [`bashsystem`](bashsystem.md) | **7** | permission model: hard blocks vs configurable blocks vs the sudo allowlist; why `rm` is an allowlist check and not a pattern |
-| [`filesystem`](filesystem.md) | **16** | the path allowlist, and line-window reads where `offset: -50` means "last 50 lines" |
-| [`browser`](browser.md) | **33** | the `[N]` index model, marker blocks, and the cost order for reading a page |
+| [`bashsystem`](bashsystem/bashsystem.md) | **7** | permission model: hard blocks vs configurable blocks vs the sudo allowlist; why `rm` is an allowlist check and not a pattern |
+| [`filesystem`](filesystem/filesystem.md) | **16** | the path allowlist, and line-window reads where `offset: -50` means "last 50 lines" |
+| [`browser`](browser/browser.md) | **33** | the `[N]` index model, marker blocks, and the cost order for reading a page |
 
 **56 tools total.**
 

@@ -21,8 +21,8 @@ Every screenshot and video in this repository was captured from a **real website
 actually playing.
 
 Each server's full tool reference lives beside this README:
-**[bashsystem](docs/bashsystem.md)** · **[filesystem](docs/filesystem.md)** ·
-**[browser](docs/browser.md)**, with the combined index in
+**[bashsystem](docs/bashsystem/bashsystem.md)** · **[filesystem](docs/filesystem/filesystem.md)** ·
+**[browser](docs/browser/browser.md)**, with the combined index in
 **[docs/tools.md](docs/tools.md)**.
 
 | | |
@@ -313,7 +313,7 @@ app.c.nf.migu.cn/…/listen/v2.0?…copyrightId=60054704101
 The page had **no `<audio>` element and no player global on `window`**, so `querySelector('audio')`
 returned null and there was nothing to read visually. The answer came from the network capture plus
 `performance.getEntriesByType('resource')` (152 entries). Full write-up:
-**[docs/debugging.md](docs/debugging.md)**.
+**[docs/browser/debugging.md](docs/browser/debugging.md)**.
 
 Console capture works the same way, including `pageerror` for uncaught exceptions — which is how you
 find a failure that never rendered anything.
