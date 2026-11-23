@@ -101,6 +101,47 @@ you or pay.**
 The point is not that it can screenshot a page. It is that **the read and the act share one
 coordinate system**: the `[N]` index the agent read at is the same index it clicks minutes later.
 
+### Play a recommended playlist — picking, not just pressing
+
+Same capture method on a music site: open the library, *choose* from what the page recommends, then
+play it. Each frame is one tool call's own screenshot.
+
+![recommended playlist flow](assets/demos/migu-playlist.gif)
+
+<table>
+<tr>
+<td width="25%"><img src="assets/migu-demo/migu-01-library.jpg" alt="Migu music library home with the recommended-playlist carousel"/></td>
+<td width="25%"><img src="assets/migu-demo/migu-02-playlist.jpg" alt="Playlist detail page with 161 tracks and a play-all button"/></td>
+<td width="25%"><img src="assets/migu-demo/migu-03-playing.jpg" alt="First track playing, progress bar running and the row marked as playing"/></td>
+<td width="25%"><img src="assets/migu-demo/migu-04-next.jpg" alt="Second track playing after next, the playing marker moved to that row"/></td>
+</tr>
+<tr>
+<td><code>browser_page_open</code> — 乐库 home: a **推荐歌单** carousel with five playlists and play counts</td>
+<td><code>browser_page_click</code> on the cover title → <code>#/playlist?playlistId=227616725</code>, **共161首**</td>
+<td><code>browser_page_click</code> on <code>[912] 播放全部</code> → playing, <code>00:05 / 04:40</code></td>
+<td><code>browser_page_click</code> on <code>[798] 下一首</code> → track 02, <code>00:16 / 04:35</code></td>
+</tr>
+</table>
+
+The choice is made from the read. The home page lists five recommended playlists **with their play
+counts** (`196.6万`, `305.0万`, `84.1万`, `198.6万`, …), so the agent picks the most-played one —
+【华语怀旧向】80后的青春旧唱片 — rather than taking whatever is first.
+
+And it never has to trust a click. The return value of each action *is* the evidence:
+
+```text
+click [912] 播放全部  ->  time: 00:01 / 04:40
+                        <tr class="el-table__row playing-row">   ← row 01 marked
+                        title="暂停"                             ← button flipped to pause
+click [4783] (pause)  ->  playing-row removed, title="播放", time frozen at 00:15
+click [4794] 下一首    ->  playing-row now on row 02
+                        song-name: 单身情歌 / singers: 林志炫, 00:02 / 04:35
+```
+
+A pause is proven by the *absence* of the playing marker and a frozen timestamp — not by assuming the
+button worked. That round trip (play → pause → resume → next) is what makes the demo verifiable rather
+than decorative.
+
 ### Multi-step flows across pages
 
 Searching a music site, following autocomplete, reaching the results table, starting playback:
@@ -121,6 +162,7 @@ Searching a music site, following autocomplete, reaching the results table, star
 </table>
 
 Watch it end to end: **[migu-play.webm](assets/demos/migu-play.webm)** ·
+**[migu-playlist.gif](assets/demos/migu-playlist.gif)** ·
 **[flights-search.webm](assets/demos/flights-search.webm)**
 
 ### Form filling, and knowing it worked

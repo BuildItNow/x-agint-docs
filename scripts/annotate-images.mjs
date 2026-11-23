@@ -52,6 +52,11 @@ const MAP = [
     ['migu-02-suggest', 'browser_page_fill'],
     ['migu-03-results', 'browser_page_click (suggestion)'],
     ['migu-04-playing', 'browser_page_click (play all)'],
+    // Migu recommended playlist: choose by play count, then play / pause / next
+    ['migu-01-library.jpg', 'browser_page_open (乐库 home)'],
+    ['migu-02-playlist.jpg', 'browser_page_click (playlist cover)'],
+    ['migu-03-playing.jpg', 'browser_page_click (播放全部)'],
+    ['migu-04-next.jpg', 'browser_page_click (下一首)'],
     // Flights
     ['flight-01-results', 'browser_page_open + browser_get_viewport_content'],
     ['flight-02-dates', 'browser_page_click (departure field)'],
