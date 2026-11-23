@@ -464,13 +464,6 @@ copied from documentation. Signatures use `name(arg, opt?)`: required args first
 
 **56 tools total.**
 
-### Why per-package docs instead of one flat list
-
-The three servers share almost nothing at the interface level. `bashsystem`'s interesting content is its
-permission model; `filesystem`'s is path validation and line windows; `browser`'s is a node-index model
-and a cost ordering that decides which of 33 tools to call. A single flat list would flatten exactly the
-parts that need explaining.
-
 ### Verifying a catalog yourself
 
 The three servers expose `tools/list` over Streamable HTTP, so the authoritative list is one request away:
