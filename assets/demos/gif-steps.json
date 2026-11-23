@@ -1,9 +1,0 @@
-[
-  { "image": "../screenshots/search-01-results.png",   "tool": "browser_page_open" },
-  { "image": "../screenshots/read-01-article.png",     "tool": "browser_page_click" },
-  { "image": "../screenshots/read-02-scrolled.png",    "tool": "browser_page_scroll" },
-  { "image": "../screenshots/search-02-followed.png",  "tool": "browser_page_search" },
-  { "image": "../screenshots/form-01-before.png",      "tool": "browser_get_viewport_content" },
-  { "image": "../screenshots/form-02-filled.png",      "tool": "browser_page_fill" },
-  { "image": "../screenshots/form-03-after.png",       "tool": "browser_page_click" }
-]

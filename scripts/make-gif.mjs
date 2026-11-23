@@ -22,11 +22,15 @@
  * read at GIF size, and they belong in prose).
  *
  * Usage:
- *   node scripts/make-gif.mjs --steps steps.json --out assets/demos/browser-session.gif
- * steps.json: [{ "image": "../screenshots/read-01-article.png", "tool": "browser_page_open" }, ...]
+ *   node scripts/make-gif.mjs --steps assets/flight-demo/steps.json \
+ *                             --out assets/demos/flight-booking.gif
+ * steps.json: [{ "image": "../flight-demo/flight-01-form.jpg", "tool": "browser_page_open" }, ...]
+ *
+ * `--steps` is required: the steps file names both the frames and the tool behind each one, so
+ * there is no sensible default to fall back on.
  */
 import { mkdirSync, readFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, basename, join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { inflateSync } from 'node:zlib';
@@ -117,8 +121,6 @@ function composite(screenshot, caption, out) {
 // revision hand-rolled LZW with literal codewords; ffmpeg rejected its output (decode
 // error, zero frames), so the encoder is not reimplemented here.
 
-/** Decode a PNG produced by ffmpeg into RGBA rows.
-
 /**
  * Decode a PNG produced by ffmpeg into RGBA rows. Only the filter types ffmpeg actually
  * emits for rgba output are needed (None / Sub / Up / Paeth), which is all of them anyway.
@@ -188,8 +190,13 @@ function writeGif(path, frames) {
 async function main() {
     const argv = process.argv.slice(2);
     const flag = (n, f) => { const i = argv.indexOf(`--${n}`); return i > -1 ? argv[i + 1] : f; };
-    const stepsPath = resolve(flag('steps', join(ASSETS, 'demos', 'gif-steps.json')));
-    const out = resolve(flag('out', join(ASSETS, 'demos', 'browser-session.gif')));
+    const stepsArg = flag('steps', null);
+    if (!stepsArg) {
+        console.error('usage: make-gif.mjs --steps <steps.json> --out <out.gif>');
+        process.exit(1);
+    }
+    const stepsPath = resolve(stepsArg);
+    const out = resolve(flag('out', join(ASSETS, 'demos', `${basename(dirname(stepsPath))}.gif`)));
     if (!existsSync(stepsPath)) { console.error(`no steps file at ${stepsPath}`); process.exit(1); }
     const steps = JSON.parse(readFileSync(stepsPath, 'utf8'));
 

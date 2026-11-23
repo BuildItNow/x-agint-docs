@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Asset capture and demo scripts for the x-agint MCP documentation site. Contains no server source.",
+  "description": "Demo capture scripts and documentation for the x-agint MCP servers. Contains no server source.",
   "scripts": {
-    "capture": "node scripts/capture-assets.mjs",
     "demo": "node scripts/mcp-demo.mjs",
     "gif": "node scripts/make-gif.mjs"
   },

@@ -102,10 +102,14 @@ needs no setup.
 - `browser_page_evaluate` is the last resort, not the first: it re-reads the page before and after to
   diff changes, so it is far heavier than a targeted read or search.
 
-## Also: screenshots do not persist
+## Also: screenshots go to a file you name
 
-The `*_for_llm` screenshot tools upload straight to the model — they return no file path, and there is
-no CLI option to write one. That is deliberate (they exist to feed the model, not to archive), but it
-means "save this as a PNG for a README" needs a separate Playwright session against the same page.
-That is what [`scripts/capture-assets.mjs`](../scripts/capture-assets.mjs) does: MCP drives and verifies
-the interaction, Playwright writes the pixels.
+The `*_for_llm` screenshot tools save the image and return `{ filePath, fileSize }`, so the same call
+that produces the pixels also says where they went. Pass an absolute path (or one starting with `~/`)
+inside the server's allowed directories; relative paths are refused. Omit it and the image lands in
+`~/.x-agint/browser/screenshots`, which is cleared on every server start.
+
+That is what makes documentation self-generating: every frame of both README demos was written by the
+tool call whose effect the frame shows, so the image and the tool log cannot disagree. No separate
+recorder, no second session against the same page.
+
