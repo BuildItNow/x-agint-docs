@@ -59,12 +59,44 @@ that same call (`filePath`), so the image and the tool log come from the same ac
 <td><code>browser_page_search</code> / <code>click</code> → 起飞时段 dropdown</td>
 <td><code>browser_page_click</code> on 上午 (00:00-11:59) → list narrows to 07:25–11:30 departures</td>
 </tr>
+<tr>
+<td width="25%"><img src="assets/flight-demo/flight-05-afternoon.jpg" alt="Afternoon filter selected, morning cleared"/></td>
+<td width="25%"><img src="assets/flight-demo/flight-06-cheapest.jpg" alt="Price-sorted ascending: Xiamen Air MF8150 at 260 yuan is the cheapest afternoon flight"/></td>
+<td width="25%"><img src="assets/flight-demo/flight-07-selected.jpg" alt="Fare panel expanded for the cheapest fare, showing the airline-direct 260 yuan economy option"/></td>
+<td width="25%"><img src="assets/flight-demo/flight-08-login.jpg" alt="Booking click lands on the login wall with the order-confirm URL in redirectURL"/></td>
+</tr>
+<tr>
+<td><code>browser_page_click</code> — swap 上午 off, 下午 (12:00-17:59) on</td>
+<td><code>browser_page_click</code> on the price column → ascending; first row ¥260</td>
+<td><code>browser_read_element_children</code> → the exact <code>&lt;button aria-label="预订"></code></td>
+<td><code>click</code> that button → order page, behind login</td>
+</tr>
 </table>
 
 The submit button is found by its **visible label**, not a selector: `browser_page_search("搜索机票")`
 returns one hit at `[149]`, and clicking `[149]` opens the results tab. The same index space runs
 through the whole flow — checking 上午 removes 47 rows and re-renders only morning departures, which
 the click return reports as `NODE_REMOVED` / `NODE_ADDED` rather than leaving the agent to guess.
+
+Then it *chooses*, from what it read. Swapping the filter to 下午 leaves six afternoon flights; sorting
+by price (`click [225]` — the column title flips to 「点击按票价从高到低」, which is how the ascending
+state is confirmed) puts the cheapest first, and reading the rows one at a time gives the comparison:
+
+| Afternoon flight | Price | Seats |
+|---|---|---|
+| **厦航 MF8150** 13:10→15:20 大兴/萧山T3 | **¥260 (1.2折)** | 3张 |
+| 东航 MU5147 12:20 | ¥300 | 少量 |
+| 南航 CZ8627 12:25 | ¥300 | 少量 |
+| 东航 MU5191 14:00 | ¥300 | 少量 |
+| 东航 MU5133 15:35 | ¥350 | 少量 |
+| 河北 NS8033 17:15 | ¥400 | 少量 |
+
+MF8150 is the cheapest **and** a full-service carrier — the expanded fare panel says 航司直营 ·
+托运行李20公斤, so it is not a baggage-excluded budget fare. `browser_read_element_children [5340]`
+then names the exact control (`[5369]<button aria-label="预订">`), and clicking it navigates to
+`fbuy.fliggy.com/travel/confirm_order.htm?…bizType=flight…quantity:1` — wrapped in a login redirect,
+because no credentials are held here. **The agent gets the booking flow started; it does not log in as
+you or pay.**
 
 The point is not that it can screenshot a page. It is that **the read and the act share one
 coordinate system**: the `[N]` index the agent read at is the same index it clicks minutes later.

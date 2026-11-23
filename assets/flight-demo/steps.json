@@ -2,5 +2,9 @@
   { "image": "../flight-demo/flight-01-form.jpg", "tool": "browser_page_open" },
   { "image": "../flight-demo/flight-02-results.jpg", "tool": "browser_page_click" },
   { "image": "../flight-demo/flight-03-filters.jpg", "tool": "browser_page_search" },
-  { "image": "../flight-demo/flight-04-filtered.jpg", "tool": "browser_page_click" }
+  { "image": "../flight-demo/flight-04-filtered.jpg", "tool": "browser_page_click" },
+  { "image": "../flight-demo/flight-05-afternoon.jpg", "tool": "browser_page_click" },
+  { "image": "../flight-demo/flight-06-cheapest.jpg", "tool": "browser_page_click" },
+  { "image": "../flight-demo/flight-07-selected.jpg", "tool": "browser_read_element_children" },
+  { "image": "../flight-demo/flight-08-login.jpg", "tool": "browser_page_screenshot_for_llm" }
 ]
