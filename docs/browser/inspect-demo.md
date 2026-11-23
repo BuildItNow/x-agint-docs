@@ -1,114 +1,112 @@
-# Inspect demo: reading one small XHR off a live market page
+# Inspect demo: reading a live market page's XHR and console
 
-A live run against **Yahoo Finance** (a foreign market-data page). The point of this demo is narrow and
-practical: `browser_page_inspect` captures an **XHR whose response body is small enough to stay inline** in the
-capture record — so the whole interface call, request *and* return, is one line you can read directly, with no
-separate body file.
+A live run against **Yahoo Finance** (a foreign market-data page). The point is narrow and practical:
+`browser_page_inspect` captures a contiguous window of the page's real behaviour — an **XHR whose response body
+is small enough to stay inline**, interleaved with the page's own **console** records. One log file, read top to
+bottom, shows both.
 
-Run through the published `@x-agint/browser` server on 2026-11-23. The committed evidence is the **raw capture
-log line itself**: [`yahoo-quote-xhr.log.jsonl`](../../assets/inspect-demo/yahoo-quote-xhr.log.jsonl) (one record,
-`crumb` credential redacted).
+Run through the published `@x-agint/browser` server on 2026-11-23. The committed evidence is a **slice of the raw
+capture log**: [`capture-excerpt.jsonl`](../../assets/inspect-demo/capture-excerpt.jsonl) (4 records — 2 network,
+2 console, in time order; `crumb` credential redacted). Frames show the intermediate page states.
 
 ---
 
-## The flow
+## The flow (frames are the intermediate steps)
 
 <table>
-<tr><td><img src="../../assets/inspect-demo/yahoo-01-quote.jpg" alt="Yahoo Finance NVDA Historical Data page: the US Markets futures bar at top and the historical prices table"/></td></tr>
-<tr><td><code>browser_page_navigate_to</code> — <code>/quote/NVDA/history/</code>; the top “US Markets” bar is what the XHR feeds</td></tr>
+<tr><td><img src="../../assets/inspect-demo/step-01-loaded.jpg" alt="Yahoo Finance NVDA Historical Data page, fully loaded before any interaction: quote header 125.53 -20.45 (-14.01%) and the historical prices table"/></td></tr>
+<tr><td><code>browser_page_screenshot_for_llm</code> — initial loaded state, before any action (ad slots still skeleton)</td></tr>
+</table>
+
+<table>
+<tr><td><img src="../../assets/inspect-demo/step-02-search.jpg" alt="Yahoo Finance search typeahead open after typing AAPL: Symbols list AAPL/AAPU/AAPL.MX/AAPL.TO plus News and Related Research"/></td></tr>
+<tr><td><code>browser_page_fill</code> [21] "AAPL" — the intermediate state that fires the search XHR</td></tr>
 </table>
 
 Sequence, in order:
 
 ```jsonc
 // browser_page_open      -> https://finance.yahoo.com/quote/NVDA/history/
-// browser_page_inspect   -> { network: true,
+//   (screenshot step-01-loaded.jpg)
+// browser_page_inspect   -> { console: true, network: true,
 //                             networkOptions: { categories: { fetchxhr: true } },
 //                             maxFileBytes: 0 }            // 0 = unbounded, nothing rolls off
+//   console.filePath : …/inspectdatas/page-<id>/console-<id>.jsonl
 //   network.filePath : …/inspectdatas/page-<id>/network-<id>.jsonl
-// browser_page_fill [21] "NVDA"   -> typeahead fires; the page also re-pulls its market bar
+// browser_page_fill [21] "AAPL"  -> typeahead fires (screenshot step-02-search.jpg)
 ```
 
-**Capture is started before the activity.** The market-bar quote call fires on load and again when the page
-refreshes; a channel opened afterwards would miss it.
+**Capture is started before the activity**, and the **page is never closed during capture** — closing discards the
+capture directory entirely, so the log must be read while the page is still open.
 
 ---
 
-## The one record that matters
+## The excerpt: network + console in one continuous window
 
-75 fetch/XHR records came back for this page — most of them ad exchanges. Filtering to Yahoo's own market API
-leaves a single small **xhr**:
+`capture-excerpt.jsonl` is not a hand-picked request — it is four consecutive lines from the capture, exactly as
+written, scrubbed only of the session `crumb`. Two **xhr** records and two **console** records, time-ordered:
 
 ```text
-seq  method  status  resourceType  contentType                       bodySize   durationMs
- 30  GET     200     xhr           application/json;charset=utf-8    923        168.67
+seq 12  GET query1.finance.yahoo.com/v7/finance/quote?&symbols=NVDA …
+        xhr · status 200 · application/json · bodySize 1235 · durationMs 1050.8 · ttfbMs 1048.9
+        responseBody_inline: {"quoteResponse":{"result":[{
+          "regularMarketPrice":125.53, "regularMarketChange":-20.449997,
+          "regularMarketChangePercent":-14.008766, "regularMarketPreviousClose":145.98,
+          "postMarketPrice":130.01, "postMarketChange":4.4799957, … "symbol":"NVDA"}]}}
+
+seq 13  GET query1.finance.yahoo.com/v7/finance/quote?&symbols=MU,NVDA,SOXL,TSLA,ZS …
+        xhr · status 200 · bodySize 1030   -> responseBody_file: body-13-res.json (crossed the inline threshold)
+
+seq 32  console error "Loading the image 'https://s.seedtag.com/se/hb/timeout?…' violates the following
+                       Content Security Policy directive: \"img-src 'self' data: blob:…\""
+seq 33  console info  "Powered by AMP ⚡ HTML – Version 2607210106000 …safeframe/1-0-45/html/container.html"
 ```
 
-```
-GET https://query1.finance.yahoo.com/v7/finance/quote
-      ?&symbols=ES=F,NQ=F,RTY=F,YM=F
-      &fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,…
-      &crumb=<REDACTED>&formatted=false&region=US&lang=en-US
+The headline record is **`seq 12`, an XHR with `bodySize: 1235`** — small enough that inspect keeps the whole
+response *inside* the record (`responseBody_inline`) instead of writing a body file. Parsed, it returns exactly
+the quote shown on screen:
 
-status 200   contentType application/json;charset=utf-8   bodySize 923 (on the wire)
-timings: durationMs 168.67 · ttfbMs 168.07 · dnsMs 0 (keep-alive) · connectMs 0 · downloadMs 168.55
-responseBody -> INLINE, 3598 bytes, parsed straight from the record
-```
+| field | value |
+|---|---|
+| `regularMarketPrice` | 125.53 |
+| `regularMarketChange` | -20.449997 |
+| `regularMarketChangePercent` | -14.008766 |
+| `postMarketPrice` / `postMarketChange` | 130.01 / +4.4799957 |
 
-Because the body is inline, the committed log line carries it verbatim — no `body-<seq>-res.json` to chase.
-Parsed, it returns exactly four quotes:
+Those match the page header verbatim — `125.53  -20.45 (-14.01%)` and after-hours `130.01 +4.48 (+3.57%)`, visible
+in `step-01-loaded.jpg`. The second XHR (`seq 13`, the Trending-tickers sidebar) is just over the inline threshold,
+so its body is filed as `body-13-res.json` — a useful contrast sitting one line away.
 
-| symbol | regularMarketPrice | change | change % |
-|---|---|---|---|
-| ES=F (S&P Futures)   | 7086.5   | +151.5  | +2.184571 |
-| NQ=F (Nasdaq Futures)| 25860.75 | +734.25 | +2.9222136 |
-| RTY=F (Russell 2000) | 2636.7   | +49.3   | +1.9053895 |
-| YM=F (Dow Futures)   | 48958.0  | +742.0  | +1.5389082 |
-
-Those are the four numbers in the page's top **US Markets** bar — visible verbatim in the screenshot:
-`S&P Futures 7,087.25 +152.25 +2.20% · Dow Futures 48,961.00 … · Nasdaq Futures 25,863.25 … · Russell 2000
-Futures 2,636.70 +49.30 +1.91%`. (The screenshot is taken after a reload, so the values have ticked up a hair
-from the captured instant — e.g. ES=F 7086.5 → 7,087.25 — which is itself what a live market feed looks like.)
-
-The match is the conclusion: that one XHR **is** the top bar. Nothing about it is in the page's HTML; you only
-see it because the capture recorded the request and kept its body.
+And the excerpt is **not only requests**: `seq 32`/`seq 33` are real console output (a CSP violation and an AMP
+info line) landing *between* the quote calls. That interleaving is what "what the page actually did" looks like —
+the rendered DOM never shows it.
 
 ---
 
-## Why this site, given the requirement “small XHR, inline”
+## Why this site, given the requirement “an XHR, as small as possible”
 
-The inspect tool files a response body to disk once the payload grows past an internal threshold; below it, the
-body stays in the record. The earlier candidates failed that requirement:
+inspect files a response body to disk once the payload grows past an internal threshold; below it the body stays
+in the record. Candidates that failed the inline requirement:
 
 | Site | Data call | Result |
 |---|---|---|
 | Yahoo history `chart` (1y daily) | ~29 KB | externalized to a body file ✗ |
 | WSJ `michelangelo/timeseries` | 3.5 KB wire / ~11 KB JSON | externalized ✗ |
-| Google Finance `batchexecute` | the NVDA chart call is ~9.7 KB | externalized; only an unrelated 792 B call stayed inline ✗ |
-| **Yahoo `v7/finance/quote` (4 futures)** | **923 B wire / 3598 B JSON** | **inline ✓** |
+| Google Finance `batchexecute` | the NVDA chart call ~9.7 KB | externalized; only an unrelated 792 B call stayed inline ✗ |
+| **Yahoo `v7/finance/quote?symbols=NVDA`** | **1235 B, single symbol** | **inline ✓ xhr** |
 
-So the demo targets the *quote* endpoint, not the *history* endpoint: same page, but the small four-symbol XHR
-is the one that survives inline. That distinction — which of a page's many XHRs is small enough to read whole —
-is exactly what reading the capture teaches.
-
----
-
-## The console half: noise is the signal to filter, not to read
-
-The same page fires dozens of ad-exchange calls (`casalemedia`, `rubiconproject`, `openx`, `pubmatic`, …) and a
-stream of `browser-intake-datadoghq.com` RUM pings. None of them is the market data. Filtering 75 fetch/XHR
-records down to one Yahoo quote call is the whole skill here — and it only works because capture records every
-call with its `resourceType`, `contentType` and body, which the rendered page never shows.
+So the demo targets the *quote* endpoint with one symbol — the smallest real market XHR that still survives
+inline. Which of a page's many XHRs is small enough to read whole is exactly what reading the capture teaches.
 
 ---
 
 ## Why this demo exists
 
 The other two demos show an agent acting on a page. This one shows an agent **reading what the page does not
-expose**: which XHR feeds a number, how long it took, and its exact return — kept inline because the payload is
-small, so the evidence is a single committed log line rather than a directory of body files.
+expose**: which XHR feeds a number, how long it took, its exact return — kept inline because the payload is small
+— and the page's own console behaviour in the same continuous window. The evidence is a single committed log
+slice rather than a directory of body files.
 
-Capture files live under `~/.x-agint/browser/inspectdatas/page-<id>/` and are **deleted when the page is
-closed** — read them first. Only this one credential-redacted record is committed: the raw request carries a
-session `crumb`, and the full capture also holds cookies and ad identifiers for a site this repository does not
-own.
+Capture files live under `~/.x-agint/browser/inspectdatas/page-<id>/` and are **deleted when the page is closed**
+— read them first. Only this credential-redacted slice is committed: the raw request carries a session `crumb`,
+and the full capture also holds cookies, ad identifiers and geolocation for a site this repository does not own.

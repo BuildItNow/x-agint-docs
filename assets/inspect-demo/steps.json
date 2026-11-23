@@ -1,3 +1,17 @@
-[
-  { "image": "yahoo-01-quote.jpg", "tool": "browser_page_navigate_to" }
-]
+{
+  "demo": "inspect-demo",
+  "capturedWith": "browser_page_inspect (console + network, fetchxhr category, maxFileBytes:0)",
+  "pageUrl": "https://finance.yahoo.com/quote/NVDA/history/",
+  "note": "Frames are written by the tool call they show and capture intermediate states. The page is NOT closed during capture — closing discards the capture directory. Evidence is a contiguous slice of the raw capture log (network + console records in time order), scrubbed only of session credentials.",
+  "steps": [
+    { "image": "step-01-loaded.jpg", "tool": "browser_page_screenshot_for_llm", "note": "Initial loaded state, before any interaction — quote header shows NVDA 125.53 -20.45 (-14.01%)" },
+    { "image": "step-02-search.jpg", "tool": "browser_page_fill", "note": "Intermediate state: typeahead dropdown open after typing AAPL (fires the search XHR)" }
+  ],
+  "logExcerpt": {
+    "file": "capture-excerpt.jsonl",
+    "lines": 4,
+    "networkRecords": 2,
+    "consoleRecords": 2,
+    "highlight": "seq 12 xhr GET query1.finance.yahoo.com/v7/finance/quote?&symbols=NVDA — status 200, bodySize 1235, response INLINE (regularMarketPrice 125.53, regularMarketChange -20.45, changePercent -14.01, postMarketPrice 130.01) — matches the on-screen quote header exactly; seq 32/33 are real console records interleaved between the XHRs"
+  }
+}

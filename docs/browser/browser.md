@@ -316,9 +316,10 @@ that path directly, it is never truncated. Which kinds are captured defaults to 
 reapplied `{network: true, networkOptions: {categories}}` changes the switches in place without restarting,
 though an omitted key keeps its default.
 
-**A worked example**: [inspect-demo.md](inspect-demo.md) reads one small **inline XHR** off a live Yahoo Finance
-page — filtering 75 fetch/XHR records to the single `v7/finance/quote` call whose body stays inline, then
-matching its four futures quotes back to the on-screen market bar.
+**A worked example**: [inspect-demo.md](inspect-demo.md) captures a contiguous window off a live Yahoo Finance
+page — an inline **`v7/finance/quote?symbols=NVDA` xhr** (`bodySize 1235`, response kept inside the record) plus
+the page's own console records interleaved around it, then matches the body's `125.53 / -20.45 / -14.01%` back to
+the on-screen quote header.
 
 ---
 
