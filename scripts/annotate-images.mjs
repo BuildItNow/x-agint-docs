@@ -28,6 +28,8 @@ const OUT = join(ASSETS, 'captioned');
 
 /** Caption width must match the scaled screenshot width or the bar will not span the frame. */
 const WIDTH = 1280;
+/** Caption strip height, in CSS px — kept short so it covers as little page as possible. */
+const BAR_HEIGHT = 48;
 
 /**
  * Each entry: file -> the tool call that produced it.
@@ -63,13 +65,22 @@ const MAP = [
     ['flight-03-filters', 'browser_page_click (Stops)'],
 ];
 
+/**
+ * The bar is translucent: an opaque strip hid the page content under it. A gradient plus a text
+ * shadow keeps the label readable over both light and dark pages without going back to solid.
+ */
 function captionHtml(label) {
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
       html,body{margin:0;background:transparent;font-family:Menlo,monospace}
-      .bar{width:${WIDTH}px;height:64px;box-sizing:border-box;background:#12121a;
-           border-top:3px solid #2f6feb;display:flex;align-items:center;padding:0 18px}
-      .mcp{font-size:13px;color:#7fd18a;margin-right:10px}
-      .tool{font-size:24px;font-weight:700;color:#fff;letter-spacing:.3px}
+      .bar{width:${WIDTH}px;height:${BAR_HEIGHT}px;box-sizing:border-box;
+           background:linear-gradient(to bottom,
+               rgba(18,18,26,0.15) 0%, rgba(18,18,26,0.45) 45%, rgba(18,18,26,0.72) 100%);
+           border-top:3px solid rgba(47,111,235,0.85);
+           display:flex;align-items:center;padding:0 18px}
+      .mcp{font-size:13px;color:#7fd18a;margin-right:10px;
+           text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.9)}
+      .tool{font-size:24px;font-weight:700;color:#fff;letter-spacing:.3px;
+            text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.95)}
     </style></head><body>
       <div class="bar"><span class="mcp">MCP</span><span class="tool">${escapeHtml(label)}</span></div>
     </body></html>`;
@@ -112,7 +123,7 @@ async function main() {
     // only painted element is the bar.
     const { chromium } = await loadPlaywright();
     const browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage({ viewport: { width: WIDTH, height: 64 }, deviceScaleFactor: 1 });
+    const page = await browser.newPage({ viewport: { width: WIDTH, height: BAR_HEIGHT }, deviceScaleFactor: 1 });
 
     for (const [name, label] of wanted) {
         const src = join(SHOTS, `${name}.png`);

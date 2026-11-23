@@ -39,6 +39,8 @@ const ASSETS = resolve(HERE, '..', 'assets');
 
 /** GIF canvas width: readable in a README while staying far under GitHub's 10 MB limit. */
 const WIDTH = 960;
+/** Caption strip height, in CSS px. Kept short so it covers as little page as possible. */
+const BAR_HEIGHT = 48;
 /** Seconds each frame is shown. */
 const FRAME_SECONDS = 2.2;
 
@@ -64,14 +66,23 @@ async function loadPlaywright() {
 /**
  * One caption strip. The page body is transparent and only the bar is painted, so compositing
  * it over a screenshot keeps every pixel of the screenshot outside the bar.
+ *
+ * The bar itself is translucent: an opaque strip hid the bottom row of the page under it (the
+ * player bar, the last table rows). A gradient plus a text shadow keeps the label readable on
+ * both light and dark pages without turning the strip back into a solid block.
  */
 function captionHtml(tool) {
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
       html,body{margin:0;background:transparent;font-family:Menlo,monospace}
-      .bar{width:${WIDTH}px;height:64px;box-sizing:border-box;background:#12121a;
-           border-top:3px solid #2f6feb;display:flex;align-items:center;padding:0 18px}
-      .mcp{font-size:13px;color:#7fd18a;margin-right:10px}
-      .tool{font-size:26px;font-weight:700;color:#fff;letter-spacing:.3px}
+      .bar{width:${WIDTH}px;height:${BAR_HEIGHT}px;box-sizing:border-box;
+           background:linear-gradient(to bottom,
+               rgba(18,18,26,0.15) 0%, rgba(18,18,26,0.45) 45%, rgba(18,18,26,0.72) 100%);
+           border-top:3px solid rgba(47,111,235,0.85);
+           display:flex;align-items:center;padding:0 18px}
+      .mcp{font-size:13px;color:#7fd18a;margin-right:10px;
+           text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.9)}
+      .tool{font-size:26px;font-weight:700;color:#fff;letter-spacing:.3px;
+            text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.95)}
     </style></head><body>
       <div class="bar"><span class="mcp">MCP</span><span class="tool">${escapeHtml(tool)}</span></div>
     </body></html>`;
@@ -213,7 +224,7 @@ async function renderCaptions(tools, outDir) {
     const profile = join(outDir, '.cap-profile');
     rmSync(profile, { recursive: true, force: true });
     const context = await chromium.launchPersistentContext(profile, {
-        headless: true, viewport: { width: WIDTH, height: 64 }, deviceScaleFactor: 2,
+        headless: true, viewport: { width: WIDTH, height: BAR_HEIGHT }, deviceScaleFactor: 2,
     });
     const page = await context.newPage();
     const paths = {};
