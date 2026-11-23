@@ -23,8 +23,9 @@ without the implementation.
 | `docs/filesystem/filesystem.md` | filesystem tool reference (16 tools) + allowlist and line-window reads |
 | `docs/browser/browser.md` | browser tool reference (33 tools) + `[N]` index model, markers, cost order |
 | `docs/browser/debugging.md` | console/network capture write-up with a real migu streaming trace |
-| `docs/browser/inspect-demo.md` | a third demo: tracing a WSJ market-data chart to its API response via capture |
-| `assets/flight-demo/`, `assets/migu-demo/`, `assets/inspect-demo/` | The demo material: frames, GIFs, and the `steps.json` behind each |
+| `docs/browser/inspect-demo.md` | a third demo: reading one small inline XHR off a live Yahoo Finance market page |
+| `assets/flight-demo/`, `assets/migu-demo/` | The demo material: frames, GIFs, and the `steps.json` behind each |
+| `assets/inspect-demo/` | The inspect demo: one frame + one credential-redacted raw capture log line |
 | `scripts/make-gif.mjs` | The only script kept — composes a GIF from a `steps.json` |
 
 **56 tools total across the three servers.** Tool counts must stay in sync between the README Tools table and

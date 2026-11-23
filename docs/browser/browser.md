@@ -316,10 +316,9 @@ that path directly, it is never truncated. Which kinds are captured defaults to 
 reapplied `{network: true, networkOptions: {categories}}` changes the switches in place without restarting,
 though an omitted key keeps its default.
 
-**A worked example**: [inspect-demo.md](inspect-demo.md) walks a live WSJ market-data page end to end —
-starting capture *before* the navigation that fires the chart request, isolating one timeseries API record out
-of 212, and reading its decoded payload back against the on-screen chart so the conclusion is a measurement
-instead of an inference.
+**A worked example**: [inspect-demo.md](inspect-demo.md) reads one small **inline XHR** off a live Yahoo Finance
+page — filtering 75 fetch/XHR records to the single `v7/finance/quote` call whose body stays inline, then
+matching its four futures quotes back to the on-screen market bar.
 
 ---
 
