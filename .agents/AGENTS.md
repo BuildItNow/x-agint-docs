@@ -1,4 +1,4 @@
-# AGENTS.md — x-agint-docs
+# AGENTS.md — @x-agint/github-docs
 
 This file is for **AI agents working in this repository**. It records what the repo is, its conventions
 and the pitfalls that make its output wrong.
@@ -9,7 +9,7 @@ User-facing documentation lives in `README.md` and `docs/`; this file does not r
 
 ## 1. What this repository is
 
-`x-agint-docs` is the **documentation and demo-capture repository** for the three published x-agint MCP
+`@x-agint/github-docs` is the **documentation and demo-capture repository** for the three published x-agint MCP
 servers (`@x-agint/bashsystem`, `@x-agint/filesystem`, `@x-agint/browser`).
 
 It contains **no server source**. The npm packages are published; their sources are not. Everything here is
