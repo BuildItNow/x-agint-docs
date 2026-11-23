@@ -18,13 +18,13 @@ without the implementation.
 
 | Path | Nature |
 |---|---|
-| `README.md` | Landing page: hero, three demo galleries (all are **browser-server demos**, grouped under the browser section), per-server overview, install, benchmarks, the Tools index, design notes |
+| `README.md` | Landing page: hero, four demo galleries (all are **browser-server demos**, grouped under the browser section), per-server overview, install, benchmarks, the Tools index, design notes |
 | `docs/bashsystem/bashsystem.md` | bashsystem tool reference (7 tools) + permission model |
 | `docs/filesystem/filesystem.md` | filesystem tool reference (16 tools) + allowlist and line-window reads |
-| `docs/browser/browser.md` | browser tool reference (33 tools) + `[N]` index model, markers, cost order; the frame-by-frame gallery section holds all three demos (flight, playlist, inspect) |
+| `docs/browser/browser.md` | browser tool reference (33 tools) + `[N]` index model, markers, cost order; the frame-by-frame gallery section holds all four demos (flight, playlist, inspect, publish-to-github) |
 | `docs/browser/debugging.md` | console/network capture write-up with a real migu streaming trace |
 | `docs/browser/inspect-demo.md` | the third demo in full: reading one small inline XHR + the console log off a live Yahoo Finance market page |
-| `assets/flight-demo/`, `assets/migu-demo/` | The two acting demos: frames, GIFs, and the `steps.json` behind each |
+| `assets/flight-demo/`, `assets/migu-demo/`, `assets/github-demo/` | The acting demos: frames, GIFs, and the `steps.json` behind each (`github-demo` publishes a repo to GitHub — dashboard → create menu → fill name → created repo → pushed tree) |
 | `assets/inspect-demo/` | The inspect (reading) demo: two intermediate-state frames + the two raw capture logs (`network-excerpt.jsonl`, `console-excerpt.jsonl`), credential-redacted |
 | `scripts/make-gif.mjs` | The only script kept — composes a GIF from a `steps.json` |
 
@@ -73,11 +73,11 @@ assets/<demo>/
 └── <demo>.gif            Assembled from the frames by scripts/make-gif.mjs   (acting demos only)
 ```
 
-The two *acting* demos (flight, playlist) follow the layout above — every frame is a screenshot and a GIF is
-assembled from them. The *reading* demo (`inspect-demo`) instead commits **raw capture logs as evidence**:
-`network-excerpt.jsonl` + `console-excerpt.jsonl` (contiguous slices of inspect's two per-channel JSONL logs,
-credential-redacted) plus the intermediate-state frames — no GIF. Its `steps.json` keys differ accordingly
-(`networkLog` / `consoleLog` instead of a single GIF).
+The three *acting* demos (flight, playlist, publish-to-github) follow the layout above — every frame is a
+screenshot and a GIF is assembled from them. The *reading* demo (`inspect-demo`) instead commits **raw capture logs
+as evidence**: `network-excerpt.jsonl` + `console-excerpt.jsonl` (contiguous slices of inspect's two per-channel
+JSONL logs, credential-redacted) plus the intermediate-state frames — no GIF. Its `steps.json` keys differ
+accordingly (`networkLog` / `consoleLog` instead of a single GIF).
 
 - **`steps.json` `image` fields are bare filenames**, resolved relative to the steps file itself — not repo-root
   paths. Keep it that way so the directory stays movable.
@@ -87,9 +87,9 @@ credential-redacted) plus the intermediate-state frames — no GIF. Its `steps.j
   page content underneath it, which is why the strip is translucent (`BAR_HEIGHT=48`, a three-stop gradient at
   `.15 → .45 → .72`, plus text-shadow). Verify legibility by comparing the composited raw YAVG against the
   frame's, rather than trusting a screenshot.
-- GIF frame timing lives in `steps.json`; both **acting** demos use 2.2 s per frame. Regenerate with
-  `npm run gif:flight` / `npm run gif:migu` (`--steps` is required; `--out` defaults to the steps file's
-  directory). The inspect demo has no GIF — its evidence is the two log excerpts.
+- GIF frame timing lives in `steps.json`; all three **acting** demos use 2.2 s per frame. Regenerate with
+  `npm run gif:flight` / `npm run gif:migu` / `npm run gif:github` (`--steps` is required; `--out` defaults to the
+  steps file's directory). The inspect demo has no GIF — its evidence is the two log excerpts.
 - Scratch output goes to `mkdtempSync(tmpdir())`, never into the repo.
 
 ### Relative paths depend on document depth

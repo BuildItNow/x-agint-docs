@@ -1,0 +1,8 @@
+[
+  { "image": "gh-01-home.jpg", "tool": "browser_page_open" },
+  { "image": "gh-02-create-menu.jpg", "tool": "browser_page_click" },
+  { "image": "gh-03-form.jpg", "tool": "browser_page_click" },
+  { "image": "gh-04-named.jpg", "tool": "browser_page_fill" },
+  { "image": "gh-05-created.jpg", "tool": "browser_page_open" },
+  { "image": "gh-06-pushed.jpg", "tool": "browser_page_reload" }
+]

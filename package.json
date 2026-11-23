@@ -23,7 +23,8 @@
   "license": "MIT",
   "scripts": {
     "gif:flight": "node scripts/make-gif.mjs --steps assets/flight-demo/steps.json --out assets/flight-demo/flight-booking.gif",
-    "gif:migu": "node scripts/make-gif.mjs --steps assets/migu-demo/steps.json --out assets/migu-demo/migu-playlist.gif"
+    "gif:migu": "node scripts/make-gif.mjs --steps assets/migu-demo/steps.json --out assets/migu-demo/migu-playlist.gif",
+    "gif:github": "node scripts/make-gif.mjs --steps assets/github-demo/steps.json --out assets/github-demo/publish-to-github.gif"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.0",

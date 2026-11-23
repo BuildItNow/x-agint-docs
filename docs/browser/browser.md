@@ -304,7 +304,45 @@ reconstruct what the page actually did.
 Full write-up (the two raw logs, the inline-vs-externalized threshold, and why this site was chosen):
 **[inspect-demo.md](inspect-demo.md)**.
 
-### Regenerating both GIFs
+### Publish a repository to GitHub: driving a logged-in product UI
+
+The fourth demo acts on a signed-in product rather than a public page — create an empty repo and push the local
+history. Each frame is one tool call's own screenshot, named in call order; the agent never touches billing or
+deletes anything.
+
+![publish to GitHub flow](../../assets/github-demo/publish-to-github.gif)
+
+<table>
+<tr>
+<td width="33%"><img src="../../assets/github-demo/gh-01-home.jpg" alt="GitHub dashboard, signed in as BuildItNow: Home pinned, Join GitHub Education banner, Good afternoon greeting"/></td>
+<td width="33%"><img src="../../assets/github-demo/gh-02-create-menu.jpg" alt="The top-bar plus menu open: New issue, New repository, Import repository, New codespace, gist, organization, project"/></td>
+<td width="34%"><img src="../../assets/github-demo/gh-04-named.jpg" alt="Create-repository form with x-agint-docs typed and the green 'x-agint-docs is available.' check; Owner BuildItNow, visibility Public"/></td>
+</tr>
+<tr>
+<td><code>browser_page_open</code> → <code>github.com/</code>; signed in as <code>BuildItNow</code></td>
+<td><code>browser_page_click</code> [55] the create “+” menu → <code>New repository</code> item appears</td>
+<td><code>browser_page_fill</code> [130] "x-agint-docs" → return reports <code>x-agint-docs is available.</code></td>
+</tr>
+<tr>
+<td width="33%"><img src="../../assets/github-demo/gh-03-form.jpg" alt="Empty Create-a-new-repository form: Owner BuildItNow, empty name field, Public selected, README/gitignore/license off"/></td>
+<td width="33%"><img src="../../assets/github-demo/gh-05-created.jpg" alt="Empty repo page BuildItNow/x-agint-docs, Public, with the Quick setup remote URL and the 'push an existing repository' git commands"/></td>
+<td width="34%"><img src="../../assets/github-demo/gh-06-pushed.jpg" alt="Same repo after push: file tree (.agents, assets, docs, scripts, README.md, package.json…), HEAD at f4a843f, README rendered"/></td>
+</tr>
+<tr>
+<td><code>browser_page_click</code> [468] New repository → navigate to <code>/new</code></td>
+<td><code>browser_page_open</code> the repo URL → Quick setup shows <code>…/x-agint-docs.git</code></td>
+<td><code>git push -u origin main</code> then <code>browser_page_reload</code> → tree at <code>f4a843f</code></td>
+</tr>
+</table>
+
+The proof is in the **fill return**, not the picture: typing the name makes GitHub add `x-agint-docs is available.`
+to the same change set (`NODE_ADDED`). The create click leaves the page briefly unresponsive (the form POST runs a
+long script); `browser_page_close` reports the tab had already navigated to `github.com/BuildItNow/x-agint-docs`
+— that URL is the evidence the repo exists. The push is plain git (`git remote add origin … && git push -u origin
+main`), the exact commands GitHub prints in the empty-repo Quick-setup panel (frame 5). Frames + tool log:
+[`assets/github-demo/steps.json`](../../assets/github-demo/steps.json).
+
+### Regenerating the GIFs
 
 The animations are assembled from the same frames by
 [`scripts/make-gif.mjs`](../../scripts/make-gif.mjs), from a `steps.json` that names the tool behind each
@@ -313,6 +351,7 @@ frame:
 ```bash
 node scripts/make-gif.mjs --steps assets/flight-demo/steps.json --out assets/flight-demo/flight-booking.gif
 node scripts/make-gif.mjs --steps assets/migu-demo/steps.json  --out assets/migu-demo/migu-playlist.gif
+node scripts/make-gif.mjs --steps assets/github-demo/steps.json --out assets/github-demo/publish-to-github.gif
 ```
 
 The caption strip is rendered in a browser and composited with `overlay` — this ffmpeg build has no
