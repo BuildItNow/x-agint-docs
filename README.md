@@ -142,9 +142,60 @@ A pause is proven by the *absence* of the playing marker and a frozen timestamp 
 button worked. That round trip (play → pause → resume → next) is what makes the demo verifiable rather
 than decorative.
 
+### Read the XHR behind a number — debugging a market page
+
+The first two demos *act* on a page. This one *reads what the page does not expose*: which interface call
+feeds a number, and its exact return. The sequence is open → start capture → act → read the logs; each frame is
+the page state at that step, and inspect writes **two separate logs** (network and console).
+
+<table>
+<tr>
+<td width="33%"><img src="assets/inspect-demo/step-01-loaded.jpg" alt="Yahoo Finance NVDA Historical Data page, fully loaded before any interaction: quote header 125.53 -20.45 (-14.01%) and the historical prices table"/></td>
+<td width="33%"><img src="assets/inspect-demo/step-02-search.jpg" alt="Yahoo Finance search typeahead open after typing AAPL: Symbols list AAPL/AAPU/AAPL.MX/AAPL.TO plus News and Related Research"/></td>
+<td width="34%"><code>network-excerpt.jsonl</code> + <code>console-excerpt.jsonl</code> — the two raw logs read back after the activity (see below)</td>
+</tr>
+<tr>
+<td><code>browser_page_open</code> → <code>/quote/NVDA/history/</code>; header reads <code>NVDA 125.53 -20.45 (-14.01%)</code></td>
+<td><code>browser_page_fill</code> [21] "AAPL" — fires a search XHR (typeahead); the page also re-pulls its quote</td>
+<td><code>browser_page_inspect</code> read-back → two JSONL logs, scrubbed of the session <code>crumb</code></td>
+</tr>
+</table>
+
+Sequence, in order — capture is **started before** the activity, and the page is **never closed during capture**
+(closing deletes the whole capture directory):
+
+```jsonc
+// browser_page_open      -> https://finance.yahoo.com/quote/NVDA/history/   (frame 1)
+// browser_page_inspect   -> { console: true, network: true,
+//                             networkOptions: { categories: { fetchxhr: true } },
+//                             maxFileBytes: 0 }            // 0 = unbounded, nothing rolls off
+// browser_page_fill [21] "AAPL"  -> typeahead fires; page re-pulls its quote   (frame 2)
+// browser_page_inspect   -> read the two logs back while the page is still open
+```
+
+The quote on screen is not in the page HTML — it arrives over an **XHR small enough to stay inline** in the
+capture record, so the whole call (request *and* return) is one readable line. The two logs inspect writes:
+
+```text
+network-excerpt.jsonl  seq 12  xhr GET v7/finance/quote?&symbols=NVDA
+                               bodySize 1235 · responseBody INLINE:
+                               regularMarketPrice 125.53, change -20.45, changePercent -14.01,
+                               postMarketPrice 130.01            ← matches the header verbatim
+console-excerpt.jsonl  seq 32  error  a CSP img-src violation (full allowlist + location kept)
+                       seq 33  info   "Powered by AMP ⚡ HTML – Version …" + script location
+```
+
+`seq 13` (the Trending-tickers call) sits one line away and is just over the inline threshold, so its body is
+filed to disk instead — inline vs filed is itself the lesson. Inspect writes **one JSONL per channel**, so the
+network log and console log are separate files; both carry a `time`, read together they reconstruct what the
+page actually did.
+
+Full write-up (the two raw logs, the inline-vs-externalized threshold, why this site was chosen):
+**[docs/browser/inspect-demo.md](docs/browser/inspect-demo.md)**.
+
 ### Why every action returns the page it changed
 
-The two demos above are also the verification story: the agent never has to guess whether a click
+The first two demos above are also the verification story: the agent never has to guess whether a click
 worked, because each action tool returns the page *after* the change. That is why the playlist demo
 can prove a pause (the `playing-row` class disappears and the timestamp freezes) rather than assume
 one, and why the flight demo can confirm the sort direction from a column title instead of trusting
@@ -153,7 +204,7 @@ the click.
 ### Screenshots that land where you asked
 
 The screenshot tools save to a file and return `{ filePath, fileSize }` — the same call both produces
-the image and names where it went. That is how every frame in both demos above was made: no separate
+the image and names where it went. That is how every frame in the demos above was made: no separate
 screen recorder, so the image and the tool log cannot disagree.
 
 `filePath` must be absolute or start with `~/`, and is checked against the server's allowed
