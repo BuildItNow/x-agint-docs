@@ -1,13 +1,14 @@
 # Inspect demo: reading a live market page's XHR and console
 
 A live run against **Yahoo Finance** (a foreign market-data page). The point is narrow and practical:
-`browser_page_inspect` captures a contiguous window of the page's real behaviour — an **XHR whose response body
-is small enough to stay inline**, interleaved with the page's own **console** records. One log file, read top to
-bottom, shows both.
+`browser_page_inspect` captures the page's real behaviour across **two separate logs** — one for **network**, one
+for **console**. The network log holds an **XHR whose response body is small enough to stay inline**; the console
+log holds the page's own output. Each committed asset is a contiguous slice of its own raw log.
 
-Run through the published `@x-agint/browser` server on 2026-11-23. The committed evidence is a **slice of the raw
-capture log**: [`capture-excerpt.jsonl`](../../assets/inspect-demo/capture-excerpt.jsonl) (4 records — 2 network,
-2 console, in time order; `crumb` credential redacted). Frames show the intermediate page states.
+Run through the published `@x-agint/browser` server on 2026-11-23. The committed evidence is **two files**:
+[`network-excerpt.jsonl`](../../assets/inspect-demo/network-excerpt.jsonl) (2 xhr records) and
+[`console-excerpt.jsonl`](../../assets/inspect-demo/console-excerpt.jsonl) (2 console records), each scrubbed only
+of session credentials. Frames show the intermediate page states.
 
 ---
 
@@ -41,30 +42,28 @@ capture directory entirely, so the log must be read while the page is still open
 
 ---
 
-## The excerpt: network + console in one continuous window
+## Two logs, not one
 
-`capture-excerpt.jsonl` is not a hand-picked request — it is four consecutive lines from the capture, exactly as
-written, scrubbed only of the session `crumb`. Two **xhr** records and two **console** records, time-ordered:
+`browser_page_inspect` writes **one file per channel** — a network log and a console log, each an independent
+JSONL stream. They are committed separately, exactly as written, scrubbed only of the session `crumb` /
+`publisherToken`. (Inspect interleaves them by `time` when you read both; here they stay in their own files.)
+
+### network-excerpt.jsonl — two consecutive xhr records
 
 ```text
 seq 12  GET query1.finance.yahoo.com/v7/finance/quote?&symbols=NVDA …
         xhr · status 200 · application/json · bodySize 1235 · durationMs 1050.8 · ttfbMs 1048.9
-        responseBody_inline: {"quoteResponse":{"result":[{
+        responseBody: {"quoteResponse":{"result":[{
           "regularMarketPrice":125.53, "regularMarketChange":-20.449997,
           "regularMarketChangePercent":-14.008766, "regularMarketPreviousClose":145.98,
-          "postMarketPrice":130.01, "postMarketChange":4.4799957, … "symbol":"NVDA"}]}}
+          "postMarketPrice":130.01, "postMarketChange":4.4799957, … "symbol":"NVDA"}]}}   // INLINE
 
 seq 13  GET query1.finance.yahoo.com/v7/finance/quote?&symbols=MU,NVDA,SOXL,TSLA,ZS …
-        xhr · status 200 · bodySize 1030   -> responseBody_file: body-13-res.json (crossed the inline threshold)
-
-seq 32  console error "Loading the image 'https://s.seedtag.com/se/hb/timeout?…' violates the following
-                       Content Security Policy directive: \"img-src 'self' data: blob:…\""
-seq 33  console info  "Powered by AMP ⚡ HTML – Version 2607210106000 …safeframe/1-0-45/html/container.html"
+        xhr · status 200 · bodySize 1030   -> responseBody: {file: "…/body-13-res.json", bytes: 4869}
 ```
 
 The headline record is **`seq 12`, an XHR with `bodySize: 1235`** — small enough that inspect keeps the whole
-response *inside* the record (`responseBody_inline`) instead of writing a body file. Parsed, it returns exactly
-the quote shown on screen:
+response *inside* the record instead of writing a body file. Parsed, it returns exactly the quote shown on screen:
 
 | field | value |
 |---|---|
@@ -77,9 +76,21 @@ Those match the page header verbatim — `125.53  -20.45 (-14.01%)` and after-ho
 in `step-01-loaded.jpg`. The second XHR (`seq 13`, the Trending-tickers sidebar) is just over the inline threshold,
 so its body is filed as `body-13-res.json` — a useful contrast sitting one line away.
 
-And the excerpt is **not only requests**: `seq 32`/`seq 33` are real console output (a CSP violation and an AMP
-info line) landing *between* the quote calls. That interleaving is what "what the page actually did" looks like —
-the rendered DOM never shows it.
+### console-excerpt.jsonl — two consecutive console records
+
+The other log holds what the page itself printed, kept verbatim (full CSP allowlist and `location` included):
+
+```text
+seq 32  error "Loading the image 'https://s.seedtag.com/se/hb/timeout?publisherToken=<REDACTED>&…' violates
+              the following Content Security Policy directive: \"img-src 'self' data: blob: about:
+              https://*.amazon-adsystem.com … <full img-src allowlist> …\". The action has been blocked."
+        location: https://finance.yahoo.com/quote/NVDA/history/
+seq 33  info  "Powered by AMP ⚡ HTML – Version 2607210106000 …safeframe/1-0-45/html/container.html"
+        location: https://cdn.ampproject.org/rtv/…/amp4ads-v0.mjs
+```
+
+A CSP violation and an AMP info line — real console output the rendered DOM never shows. Read alongside the
+network log (both carry a `time`), they reconstruct what the page actually did.
 
 ---
 
@@ -104,8 +115,8 @@ inline. Which of a page's many XHRs is small enough to read whole is exactly wha
 
 The other two demos show an agent acting on a page. This one shows an agent **reading what the page does not
 expose**: which XHR feeds a number, how long it took, its exact return — kept inline because the payload is small
-— and the page's own console behaviour in the same continuous window. The evidence is a single committed log
-slice rather than a directory of body files.
+— and the page's own console behaviour. The evidence is two committed log slices (network + console) rather than a
+directory of body files.
 
 Capture files live under `~/.x-agint/browser/inspectdatas/page-<id>/` and are **deleted when the page is closed**
 — read them first. Only this credential-redacted slice is committed: the raw request carries a session `crumb`,

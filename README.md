@@ -318,8 +318,9 @@ returned null and there was nothing to read visually. The answer came from the n
 Console capture works the same way, including `pageerror` for uncaught exceptions — which is how you
 find a failure that never rendered anything.
 
-A full worked run — a foreign market-data page, an inline `v7/finance/quote` **xhr** plus the page's own
-**console** records in one contiguous capture window: **[docs/browser/inspect-demo.md](docs/browser/inspect-demo.md)**.
+A full worked run — a foreign market-data page captured into inspect's **two separate logs**: a network log with
+an inline `v7/finance/quote` **xhr**, and a console log with the page's own records:
+**[docs/browser/inspect-demo.md](docs/browser/inspect-demo.md)**.
 
 ---
 
