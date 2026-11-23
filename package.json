@@ -2,8 +2,25 @@
   "name": "@x-agint/github-docs",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "description": "Demo capture scripts and documentation for the x-agint MCP servers. Contains no server source.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "documentation",
+    "demo",
+    "ai-agent",
+    "ai-native",
+    "agent-native"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "type": "module",
+  "author": {
+    "name": "Yang G",
+    "url": "https://github.com/BuildItNow"
+  },
+  "license": "MIT",
   "scripts": {
     "gif:flight": "node scripts/make-gif.mjs --steps assets/flight-demo/steps.json --out assets/flight-demo/flight-booking.gif",
     "gif:migu": "node scripts/make-gif.mjs --steps assets/migu-demo/steps.json --out assets/migu-demo/migu-playlist.gif"
