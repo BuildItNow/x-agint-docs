@@ -37,11 +37,12 @@ Cursor, Cline, or your own agent host).
 
 ## What an agent actually does with them
 
-### Book a flight — read, then act on what it read
-
-A flight booking site is not a static document — the agent has to drive it. This sequence was
-captured live through the MCP tools; each frame below **is** one tool call's screenshot, written by
+These are **browser-server demos** — every capture in this repository is driven by `@x-agint/browser` (see the
+[browser](#browser) section). A flight booking site is not a static document — the agent has to drive it. This
+sequence was captured live through the MCP tools; each frame below **is** one tool call's screenshot, written by
 that same call (`filePath`), so the image and the tool log come from the same action.
+
+### Book a flight — read, then act on what it read
 
 ![flight booking flow](assets/flight-demo/flight-booking.gif)
 
@@ -259,6 +260,22 @@ Drive Chromium through Playwright. The design bet: **text beats screenshots** fo
 ```jsonc
 { "command": "x-browser" }
 ```
+
+### Demos — every capture in this repo is a browser-server demo
+
+All three worked demos below belong to the browser server; each frame is one tool call's own screenshot, written
+by that same call (`filePath`), so the image and the tool log cannot disagree:
+
+| Demo | What it shows | Frames + `steps.json` |
+|---|---|---|
+| **Book a flight** | read → choose → act on one `[N]` index space (Fliggy) | [`assets/flight-demo/`](assets/flight-demo/) |
+| **Play a playlist** | pick the most-played recommendation, prove playback by return values (Migu) | [`assets/migu-demo/`](assets/migu-demo/) |
+| **Debug a market page** | read the inline XHR + console behind a number (`browser_page_inspect`, two logs) | [`assets/inspect-demo/`](assets/inspect-demo/) |
+
+The first two are walked through in full **[What an agent actually does with them](#what-an-agent-actually-does-with-them)**;
+the third is the inspect trace in **[Debugging what the page cannot show you](#debugging-what-the-page-cannot-show-you)**
+and **[docs/browser/inspect-demo.md](docs/browser/inspect-demo.md)**. The same galleries are mirrored on the
+reference page: **[docs/browser/browser.md](docs/browser/browser.md)**.
 
 A page read returns a tree of nodes, each with a stable `[N]` index and markers describing what the
 node *is*:

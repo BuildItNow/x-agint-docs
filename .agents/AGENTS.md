@@ -18,14 +18,14 @@ without the implementation.
 
 | Path | Nature |
 |---|---|
-| `README.md` | Landing page: hero, two demo galleries, per-server overview, install, benchmarks, the Tools index, design notes |
+| `README.md` | Landing page: hero, three demo galleries (all browser-server demos), per-server overview, install, benchmarks, the Tools index, design notes |
 | `docs/bashsystem/bashsystem.md` | bashsystem tool reference (7 tools) + permission model |
 | `docs/filesystem/filesystem.md` | filesystem tool reference (16 tools) + allowlist and line-window reads |
-| `docs/browser/browser.md` | browser tool reference (33 tools) + `[N]` index model, markers, cost order |
+| `docs/browser/browser.md` | browser tool reference (33 tools) + `[N]` index model, markers, cost order; the frame-by-frame gallery section holds all three demos (flight, playlist, inspect) |
 | `docs/browser/debugging.md` | console/network capture write-up with a real migu streaming trace |
-| `docs/browser/inspect-demo.md` | a third demo: reading one small inline XHR off a live Yahoo Finance market page |
-| `assets/flight-demo/`, `assets/migu-demo/` | The demo material: frames, GIFs, and the `steps.json` behind each |
-| `assets/inspect-demo/` | The inspect demo: one frame + one credential-redacted raw capture log line |
+| `docs/browser/inspect-demo.md` | the third demo in full: reading one small inline XHR + the console log off a live Yahoo Finance market page |
+| `assets/flight-demo/`, `assets/migu-demo/` | The two acting demos: frames, GIFs, and the `steps.json` behind each |
+| `assets/inspect-demo/` | The inspect (reading) demo: two intermediate-state frames + the two raw capture logs (`network-excerpt.jsonl`, `console-excerpt.jsonl`), credential-redacted |
 | `scripts/make-gif.mjs` | The only script kept — composes a GIF from a `steps.json` |
 
 **56 tools total across the three servers.** Tool counts must stay in sync between the README Tools table and

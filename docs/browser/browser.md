@@ -268,6 +268,42 @@ A pause is proven by the **absence** of the playing marker and a frozen timestam
 Frame-by-frame arguments and returns:
 [`assets/migu-demo/steps.json`](../../assets/migu-demo/steps.json).
 
+### Debugging a market page: reading the XHR behind a number
+
+The first two demos *act* on a page. This one *reads what the page does not expose*: which interface call feeds
+a number, and its exact return — captured by `browser_page_inspect` into **two separate logs** (network and
+console). The frames are intermediate states; the evidence is the raw log slices.
+
+<table>
+<tr><td><img src="../../assets/inspect-demo/step-01-loaded.jpg" alt="Yahoo Finance NVDA Historical Data page, fully loaded before any interaction: quote header 125.53 -20.45 (-14.01%) and the historical prices table"/></td></tr>
+<tr><td><code>browser_page_screenshot_for_llm</code> — initial loaded state, before any action; the header reads <code>NVDA 125.53 -20.45 (-14.01%)</code></td></tr>
+</table>
+
+<table>
+<tr><td><img src="../../assets/inspect-demo/step-02-search.jpg" alt="Yahoo Finance search typeahead open after typing AAPL: Symbols list AAPL/AAPU/AAPL.MX/AAPL.TO plus News and Related Research"/></td></tr>
+<tr><td><code>browser_page_fill</code> [21] "AAPL" — the intermediate state that fires a search XHR (typeahead)</td></tr>
+</table>
+
+The page's own market data arrives over an **XHR small enough to stay inline** in the capture record, so the whole
+call — request *and* return — is one readable line:
+
+```text
+network-excerpt.jsonl  seq 12  xhr GET v7/finance/quote?&symbols=NVDA
+                               bodySize 1235 · responseBody INLINE:
+                               regularMarketPrice 125.53, change -20.45, changePercent -14.01,
+                               postMarketPrice 130.01            ← matches the header verbatim
+console-excerpt.jsonl  seq 32  error  a CSP img-src violation (full allowlist + location kept)
+                       seq 33  info   "Powered by AMP ⚡ HTML – Version …" + script location
+```
+
+`seq 13` (the Trending-tickers call) sits one line away and is just over the inline threshold, so its body is
+filed to disk instead — the contrast between inline and filed is itself the lesson. Inspect writes **one JSONL per
+channel**, so the network log and the console log are separate files; both carry a `time`, read together they
+reconstruct what the page actually did.
+
+Full write-up (the two raw logs, the inline-vs-externalized threshold, and why this site was chosen):
+**[inspect-demo.md](inspect-demo.md)**.
+
 ### Regenerating both GIFs
 
 The animations are assembled from the same frames by
@@ -316,10 +352,10 @@ that path directly, it is never truncated. Which kinds are captured defaults to 
 reapplied `{network: true, networkOptions: {categories}}` changes the switches in place without restarting,
 though an omitted key keeps its default.
 
-**A worked example**: [inspect-demo.md](inspect-demo.md) captures a live Yahoo Finance page into inspect's **two
-separate logs** — a network log holding an inline `v7/finance/quote?symbols=NVDA` **xhr** (`bodySize 1235`, response
-kept inside the record) and a console log holding the page's own records — then matches the body's
-`125.53 / -20.45 / -14.01%` back to the on-screen quote header.
+**A worked example**: [inspect-demo.md](inspect-demo.md) (gallery above, "Debugging a market page") captures a live
+Yahoo Finance page into inspect's two separate logs — an inline `v7/finance/quote?symbols=NVDA` **xhr**
+(`bodySize 1235`) and the page's own console records — then matches the body's `125.53 / -20.45 / -14.01%` back to
+the on-screen quote header.
 
 ---
 
