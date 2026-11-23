@@ -167,7 +167,8 @@ operating instructions mid-session.
 ## What these tools actually did, frame by frame
 
 All four galleries below were captured **through these tools**, and every frame is one tool call's own
-screenshot: the same call that acted on the page wrote the file via its `filePath` argument. So the image
+screenshot: the same call that acted on the page produced the image, which was then moved into the demo
+directory. So the image
 and the tool log cannot disagree — there was no separate screen recorder.
 
 ### Publish a repository to GitHub: driving a logged-in product UI

@@ -30,7 +30,7 @@ way to tell whether it was advancing.
 
 ```jsonc
 { "id": "<pageId>", "options": { "network": true } }
-// -> { enabled: true, filePath: "…/page-<id>/network-<id>.jsonl" }
+// -> { enabled: true, filePath: "…/pagedatas/page-<id>/inspects/network.jsonl" }
 ```
 
 Then do whatever produces the activity — here, `browser_page_click` on 播放全部. Read the file at any
@@ -105,9 +105,10 @@ needs no setup.
 ## Also: screenshots go to a file you name
 
 The `*_for_llm` screenshot tools save the image and return `{ filePath, fileSize }`, so the same call
-that produces the pixels also says where they went. Pass an absolute path (or one starting with `~/`)
-inside the server's allowed directories; relative paths are refused. Omit it and the image lands in
-`~/.x-agint/browser/screenshots`, which is cleared on every server start.
+that produces the pixels also says where they went. The file lands in the page's own data directory,
+`~/.x-agint/browser/pagedatas/page-<pageId>/screenshots/`, and is deleted when the page closes —
+copy it elsewhere with a filesystem tool if you need it later (the demo frames were moved into their
+demo directories this way).
 
 That is what makes documentation self-generating: every frame of both README demos was written by the
 tool call whose effect the frame shows, so the image and the tool log cannot disagree. No separate

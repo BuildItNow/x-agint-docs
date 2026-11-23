@@ -32,8 +32,8 @@ Sequence, in order:
 // browser_page_inspect   -> { console: true, network: true,
 //                             networkOptions: { categories: { fetchxhr: true } },
 //                             maxFileBytes: 0 }            // 0 = unbounded, nothing rolls off
-//   console.filePath : …/inspectdatas/page-<id>/console-<id>.jsonl
-//   network.filePath : …/inspectdatas/page-<id>/network-<id>.jsonl
+//   console.filePath : …/pagedatas/page-<id>/inspects/console.jsonl
+//   network.filePath : …/pagedatas/page-<id>/inspects/network.jsonl
 // browser_page_fill [21] "AAPL"  -> typeahead fires (screenshot step-02-search.jpg)
 ```
 
@@ -118,6 +118,6 @@ expose**: which XHR feeds a number, how long it took, its exact return — kept 
 — and the page's own console behaviour. The evidence is two committed log slices (network + console) rather than a
 directory of body files.
 
-Capture files live under `~/.x-agint/browser/inspectdatas/page-<id>/` and are **deleted when the page is closed**
-— read them first. Only this credential-redacted slice is committed: the raw request carries a session `crumb`,
+Capture files live under `~/.x-agint/browser/pagedatas/page-<id>/inspects/` and are **deleted when the page is
+closed** — read them first. Only this credential-redacted slice is committed: the raw request carries a session `crumb`,
 and the full capture also holds cookies, ad identifiers and geolocation for a site this repository does not own.

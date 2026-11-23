@@ -39,13 +39,13 @@ Cursor, Cline, or your own agent host).
 
 These are **browser-server demos** — every capture in this repository is driven by `@x-agint/browser` (see the
 [browser](#browser) section). None of these targets is a static document — the agent has to drive it. Each demo
-below was captured live through the MCP tools; each frame **is** one tool call's screenshot, written by that same
-call (`filePath`), so the image and the tool log come from the same action.
+below was captured live through the MCP tools; each frame **is** one tool call's screenshot, saved by that
+same call and then moved into the demo directory, so the image and the tool log come from the same action.
 
 ### Publish a repository to GitHub — driving a real product UI
 
 The first demo drives a logged-in product rather than a public page: create an empty repo and push
-the existing local history. Same capture method — each frame is one tool call's own screenshot (`filePath`),
+the existing local history. Same capture method — each frame is one tool call's own screenshot,
 named in call order. The agent stops short of anything irreversible beyond the repo itself; it never touches
 billing or deletes anything.
 
@@ -247,10 +247,11 @@ The screenshot tools save to a file and return `{ filePath, fileSize }` — the 
 the image and names where it went. That is how every frame in the demos above was made: no separate
 screen recorder, so the image and the tool log cannot disagree.
 
-`filePath` must be absolute or start with `~/`, and is checked against the server's allowed
-directories — relative paths are refused. Omit it and the image lands in
-`~/.x-agint/browser/screenshots`, which is cleared on every server start so the directory never
-accumulates.
+The image lands in the page's own data directory,
+`~/.x-agint/browser/pagedatas/page-<pageId>/screenshots/`, with a timestamp name — and the whole
+directory is deleted when the page closes, so copy it elsewhere (a filesystem tool) if you need the
+frame later. The demos above save each frame's committed path right after its capture call: the
+committed frames must outlive the page.
 
 The GIFs are assembled by [`scripts/make-gif.mjs`](scripts/make-gif.mjs) from a `steps.json` that names
 the tool behind each frame, so both demos regenerate end to end:
@@ -354,8 +355,8 @@ Drive Chromium through Playwright. The design bet: **text beats screenshots** fo
 
 ### Demos — every capture in this repo is a browser-server demo
 
-All four worked demos below belong to the browser server; each frame is one tool call's own screenshot, written
-by that same call (`filePath`), so the image and the tool log cannot disagree:
+All four worked demos below belong to the browser server; each frame is one tool call's own screenshot, saved
+by that same call and then moved into the demo directory, so the image and the tool log cannot disagree:
 
 | Demo | What it shows | Frames + `steps.json` |
 |---|---|---|
@@ -407,7 +408,7 @@ The capture channel writes to disk, so it is auditable after the fact:
 
 ```jsonc
 { "id": "…", "options": { "network": true } }
-// -> filePath: …/page-<id>/network-<…>.jsonl — one JSON object per line, safe to tail live
+// -> filePath: …/pagedatas/page-<id>/inspects/network.jsonl — one JSON object per line, safe to tail live
 ```
 
 Real example from this repo's material — proving a streaming player actually fetched audio when the

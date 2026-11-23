@@ -155,8 +155,8 @@ so profiles never collide.
 
 The demo material under [`assets/flight-demo/`](../../assets/flight-demo/) and
 [`assets/migu-demo/`](../../assets/migu-demo/) is all written and read back through these tools. Each frame
-is saved by the very call that produced it — a screenshot tool passed a `filePath` inside the allowed
-directories — and the per-frame record beside it is a plain JSON file:
+is saved by the very call that produced it — the screenshot tool saves into the page's own data directory,
+and the frame was then moved into the demo directory — and the per-frame record beside it is a plain JSON file:
 
 ```jsonc
 filesystem_read_text_file({ "path": "assets/migu-demo/steps.json", "tryFullRead": true })
