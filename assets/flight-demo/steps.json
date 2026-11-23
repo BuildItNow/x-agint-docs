@@ -1,0 +1,6 @@
+[
+  { "image": "../flight-demo/flight-01-form.jpg", "tool": "browser_page_open" },
+  { "image": "../flight-demo/flight-02-results.jpg", "tool": "browser_page_click" },
+  { "image": "../flight-demo/flight-03-filters.jpg", "tool": "browser_page_search" },
+  { "image": "../flight-demo/flight-04-filtered.jpg", "tool": "browser_page_click" }
+]

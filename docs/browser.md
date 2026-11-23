@@ -1,0 +1,222 @@
+# browser
+
+Drive a real Chromium through MCP: read pages, search, click, fill, scroll, screenshot.
+
+```bash
+npm install @x-agint/browser   # postinstall downloads Chromium
+```
+
+```jsonc
+{ "mcpServers": { "browser": { "command": "x-browser" } } }   // stdio
+```
+
+- npm: `@x-agint/browser` · latest **1.0.3**
+- tools: **33** (read live from `tools/list`, not copied from docs)
+- runtime: a long-lived **daemon** the MCP host talks to, which spawns a detached **browser server** on
+  demand that owns Chromium. `browser_open`/`browser_close` are handled by the daemon itself and are not
+  forwarded — a server cannot start or stop itself.
+
+---
+
+## The cost order — this is the whole design
+
+The tools are ranked by how expensive they are. Reach down the list only as far as needed; the further you
+get, the more redundant information comes back.
+
+1. **The return value of an action** — `browser_page_click`, `_fill`, `_scroll` etc. all return the page
+   *after* the change. Judge success from that first; do not re-read.
+2. **`browser_element_search` / `browser_page_search`** — you have a keyword: find the node and its index,
+   without reading a large region. Scoped (element) search first, whole-page as fallback.
+3. **`browser_get_element_content(N)`** — index known, need that node's full content.
+4. **`browser_read_element_*`** — index known, expand structure precisely:
+   `innertext` (text only, lightest) · `children` (windowed children) · `ancestors` (ownership) ·
+   `attributes` (every real attribute)
+5. **`browser_get_viewport_content`** — fallback: page refreshed, no keyword, index unknown.
+6. **`browser_page_evaluate`** — last resort; it re-reads the page before *and* after to diff changes.
+
+---
+
+## The `[N]` index model
+
+Bulk output marks nodes as `[N]<tag>`, and **the index stays stable for the lifetime of that DOM node**.
+It is also reachable from inside a script — the index is the node's `__xagent_data_id` attribute:
+
+```js
+document.querySelector('[__xagent_data_id="12"]')?.innerText
+```
+
+A marker block may follow the index; the first word is the type, the rest are `k=v` pairs:
+
+| Marker | Meaning |
+|---|---|
+| `{SCROLLABLE width height scrollWidth scrollHeight scrollLeft scrollTop}` | node can scroll; sizes are CSS pixels. Content larger than the box on an axis means that axis overflows — scroll it with `browser_page_scroll` passing this `[N]`. `width/height` are `clientWidth/clientHeight` for an element (scrollbar excluded) but `innerWidth/innerHeight` for the viewport (scrollbar included) — asymmetric on purpose |
+| `{CHILD_OF_PARENT index=N}` | the node's 1-based ordinal in its parent's child list; only printed when the parent's retained children are non-contiguous |
+| `{CHILD_MOREABLE total from to}` | children not fully returned; page with `browser_read_element_children` |
+| `{INNERTEXT_MOREABLE total from to}` | innerText truncated by line; page with `browser_read_element_innertext` |
+| `{INNERTEXT}` | content presented as concatenated innerText (non-structured children) |
+
+Markers stack: `[5]{CHILD_OF_PARENT index=3}{SCROLLABLE …}{CHILD_MOREABLE total=40 from=1 to=10}<div>`.
+
+---
+
+## Tools (33)
+
+### Browser lifecycle (2)
+```
+browser_open()
+browser_close()
+```
+`browser_open` is safe when already open — it reuses the browser and brings the window forward.
+`browser_close` ends the session; the next open starts fresh.
+
+### Page lifecycle (8)
+```
+browser_page_open(url)              browser_page_list()
+browser_page_navigate_to(id, url)   browser_page_info(id)
+browser_page_back(id)               browser_page_close(id)
+browser_page_forward(id)            browser_page_reload(id)
+```
+
+### Reading — cheapest first (7)
+```
+browser_read_element_innertext(id, index, offset?, count?, tryFullRead?)   # 20 lines default, max 100
+browser_read_element_children(id, index, offset?, count?, tryFullRead?)    # 10 children default, max 50
+browser_read_element_ancestors(id, index, level?)                          # 3 levels up default
+browser_read_element_attributes(id, index)
+browser_get_element_content(id, index, offset?, count?, tryFullRead?)      # 250 default, max 500
+browser_get_viewport_content(id, offset?, count?, tryFullRead?)            # 500 default, max 1000
+browser_page_inspect(id, options?)
+```
+
+All reads report `from` / `to` / `total`, and every child returned by `read_element_children` carries an
+`[N]` usable directly in the next call.
+
+**Why `read_element_attributes` exists**: bulk output is lossy *by design* — `class` is truncated when
+long, `<a href>` is trimmed to its path, `<img src>` is dropped. Only this tool returns every attribute as
+it truly is: full class, complete href (domain, query, hash), `src` including inline base64, `data-*`,
+`target`, `style`.
+
+The structure returned is a tree of **ancestor-descendant** relations, not direct parent-child — and a
+paged payload always leads with its `[VIEWPORT]` line even when the window is empty (`count: 0`, or an
+offset past the end): one line with `from`/`to`/`total` at 0. A node-level read has no viewport line and
+genuinely can be empty.
+
+### Searching (2)
+```
+browser_page_search(id, text, useRegex?, maxResults?, level?)
+browser_element_search(id, index, text, useRegex?, maxResults?, level?)    # scoped: prefer
+```
+
+Matching is over **visually readable** content, in this order: `#text` node text →
+`placeholder`/`title`/`alt`/`aria-label` → a form control's current runtime `value` (what the user actually
+typed) → falling back to `innerText`.
+
+Hits come back as **one forest, not one path per hit**: hits sharing an ancestor print it once, unrelated
+tops are separated by a blank line (`''` when nothing matched), and order is DOM order (the walk is
+depth-first). The result is a single string, not an array.
+
+### Interaction (9) — every one returns the page after the change
+```
+browser_page_click(id, index)
+browser_page_fill(id, index, value)
+browser_page_hover(id, index)
+browser_page_press_key(id, key)
+browser_page_select_option(id, index, value)
+browser_page_double_click(id, index)
+browser_page_check(id, index)
+browser_page_uncheck(id, index)
+browser_page_scroll(id, index?, xDirection?, yDirection?)
+```
+
+`press_key` is page-level: focus the input with `browser_page_click` first, then submit. Keys are named
+(`Enter`, `Escape`, `Tab`, `ArrowDown`, …).
+
+`browser_page_scroll` — omit `index` to scroll the whole viewport (`[VIEWPORT]{SCROLLABLE …}`), or pass the
+`[N]` of a `[N]{SCROLLABLE …}` container. The two axes are independent: `down`/`up` move 80% of viewport
+height, `top`/`bottom` jump to an end; giving only `xDirection` performs **no** vertical scroll; giving
+neither defaults to `yDirection=down`; both scrolls diagonally.
+
+### Positioning, scripting, screenshots (4)
+```
+browser_element_into_viewport(id, index)      # no-op when already visible; handles iframes + scroll containers
+browser_page_evaluate(id, script, timeoutMs?)
+browser_page_screenshot_for_llm(id)
+browser_element_screenshot_for_llm(id, index) # prefer when the index is known: more precise, cheaper
+```
+
+`browser_page_evaluate` gotchas, all of which bite:
+
+- The script is a **code body**, not a function: write `return document.title`, not `() => document.title`
+  (a bare function evaluates to a function object and comes back `undefined`).
+- Variables from the caller are not in scope — the script must be self-contained.
+- Return JSON-serializable data. DOM nodes, functions and cyclic objects arrive as `undefined`.
+- `await` works directly in the body.
+- A body with no `return` is valid but yields no result.
+- The default deadline is 120000 ms; **a script that exceeds it keeps running and leaves the page
+  blocked**, so keep loops bounded.
+
+### Meta (1)
+```
+browser_readme()
+```
+The built-in usage guide — the cost order above, plus CLI commands. Cheap way for an agent to re-read the
+operating instructions mid-session.
+
+---
+
+## Debugging a page that misbehaves
+
+`browser_page_inspect` reads what the rendered page cannot tell you: a console error, what an interface
+call actually returned, which request failed, how long it took.
+
+1. Start the channel you need — `{console: true}` and/or `{network: true}` (with
+   `networkOptions.categories` to pick kinds). The result gives each channel's `filePath`.
+2. Do whatever on the page produces the activity.
+3. Read the file at any time — capture keeps running while you read. Each channel reports `enabled`,
+   `filePath`, and for network the live categories.
+
+The file is **one JSON object per line**, safe to tail live. Newest records sit at the bottom, so read from
+the **end** for "what just happened"; `seq` numbers them for the session. It is a rolling window capped at
+`maxFileBytes` (default 10 MB) — a file not starting at `seq:1` is normal (older lines trimmed to fit, not
+lost).
+
+Two things that are easy to get wrong:
+
+- **Closing the page discards capture entirely** — it stops and deletes the whole capture directory. Read
+  the file *before* `browser_page_close`.
+- **A missing record is not proof a request never ran.** Requests the browser blocks before any network
+  event (CORS, mixed content, aborted by navigation) leave no record at all; the page usually logs or
+  `pageerror`s such a failure, so read console alongside network.
+
+Network records carry `method`, `url`, `resourceType`, `status`, `contentType`, `bodySize`, plus timings
+(`durationMs`, `ttfbMs`, `dnsMs`, `connectMs`, `tlsMs?`, `downloadMs`). `status: 0` means no response;
+`bodySize/headerSize: -1` means unknown. A body is inlined when small, otherwise `{file, bytes}` — open
+that path directly, it is never truncated. Which kinds are captured defaults to **fetchxhr only**; a
+reapplied `{network: true, networkOptions: {categories}}` changes the switches in place without restarting,
+though an omitted key keeps its default.
+
+---
+
+## Error messages are written for the model
+
+A tool error is relayed straight back to the LLM, so it names the next action — `getPage` answers a bad
+page id with *"Try browser_page_list …"*. Descriptions always refer to other tools by their full name
+(`browser_get_viewport_content`, never `get_page_content`), because a shortened name sends the model looking
+for a tool that does not exist.
+
+---
+
+## Gotchas
+
+1. **The daemon is long-lived and keeps the catalog from the build it started with.** If an old daemon is
+   still running, you are exercising *that* catalog — a report naming tools that no longer exist in source is
+   an environment problem, not a code problem.
+2. **`--daemon stop` never stops the browser server, by design.** The detached `--serve` process outlives its
+   daemon and reparents to PID 1, keeping Chromium alive; once its temp home is deleted nothing records its
+   pid. Any cleanup must issue `--server stop` as well.
+3. **Output markers like `[VIEWPORT]` are part of the external contract** — changing them changes the output
+   format, and test assertions (including escaped regex forms) with it.
+4. **`playwright` is a runtime dependency, never bundled**: it resolves its own installation directory to find
+   the browser binary and loads native modules, both of which a static bundle breaks.
+5. **This package is deliberately self-contained** — no cross-package `tsconfig` inheritance, so it can be moved
+   out of the monorepo and compiled standalone.
