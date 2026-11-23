@@ -208,18 +208,3 @@ npm run gif:migu
 The `background: true` contract above is what a long-running capture or a resident server needs, and the
 foreground process-group rule is why an interrupted capture does not leave orphaned ffmpeg or Chromium
 children behind. The frame-by-frame walkthroughs are in [browser.md](../browser/browser.md).
-
----
-
-## Gotchas
-
-1. **`dist/index.js` is a library barrel, not an entry point.** Importing it has no side effects and never
-   starts a server — pointing a launcher there makes the MCP handshake hang. The executable is
-   `dist/bin/x-bashsystem.js`.
-2. **Result fields are the wire contract** (`exitCode`, `logPath`, `timedOut`, `currentDirectory`,
-   `allowedDirectories`, `status: 'backgroundStarted'`). Renaming one is a breaking change for clients.
-3. **The rm guard does not expand `$VAR/...` or `~`** — it treats them as relative and refuses. Write
-   literal absolute paths inside allowed directories when you intend to delete.
-4. **A command containing blocked *text* can be refused even in a heredoc.** The guard inspects the whole
-   command line, so writing a script that mentions `rm -rf` inside a `cat <<EOF` may trip it. Write the
-   file with the filesystem tools instead.
