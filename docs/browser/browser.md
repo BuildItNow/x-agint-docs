@@ -385,9 +385,11 @@ Two things that are easy to get wrong:
   event (CORS, mixed content, aborted by navigation) leave no record at all; the page usually logs or
   `pageerror`s such a failure, so read console alongside network.
 
-Network records carry `method`, `url`, `resourceType`, `status`, `contentType`, `bodySize`, plus timings
-(`durationMs`, `ttfbMs`, `dnsMs`, `connectMs`, `tlsMs?`, `downloadMs`). `status: 0` means no response;
-`bodySize/headerSize: -1` means unknown. A body is inlined when small, otherwise `{file, bytes}` — open
+Network records carry `method`, `url`, `resourceType`, `status`, `contentType`, `bodySize`, plus a nested
+`timing` object (`durationMs`, `ttfbMs`, `dnsMs`, `connectMs`, `tlsMs?`, `downloadMs`). `status: 0` means no response;
+`bodySize/headerSize: -1` means unknown; `bodySize` is the **decoded** body length, equal to the bytes
+`responseBody` carries when one exists (HTTP/2 wire accounting is unreliable, so it is not a transferred-size figure).
+A body is inlined when small, otherwise `{file, bytes}` — open
 that path directly, it is never truncated. Which kinds are captured defaults to **fetchxhr only**; a
 reapplied `{network: true, networkOptions: {categories}}` changes the switches in place without restarting,
 though an omitted key keeps its default.
