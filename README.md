@@ -466,10 +466,7 @@ For a machine you reach over a network rather than a process you spawn:
 }
 ```
 
-A server only demands auth when you set `mcpAuthToken` on it — the default config sets none, so a plain
-`url` connect works out of the box (loopback). When you do set one, every request must carry it in an
-**`X-MCP-Endpoint`** header, not `Authorization: Bearer`. A token never changes what
-is bound — set `mcpHost` explicitly, keep the primary instance on `127.0.0.1`, and put a
+Set `mcpHost` explicitly, keep the primary instance on `127.0.0.1`, and put a
 TLS-terminating proxy in front (this repo's own setup uses `tailscale serve`, tailnet-only).
 
 The allowlist is enforced **on the machine the server runs on**. Nothing a client sends widens it.
