@@ -473,6 +473,39 @@ TLS-terminating proxy in front (this repo's own setup uses `tailscale serve`, ta
 
 The allowlist is enforced **on the machine the server runs on**. Nothing a client sends widens it.
 
+### Sandboxed hosts (HOME virtualization)
+
+Some MCP hosts run each server in a per-instance sandbox: they spawn the process through their own
+Node launcher, **re-inject `HOME` to point at a runtime directory**, and derive the filesystem
+allowlist from that virtual HOME (`$HOME/Downloads`, `$HOME/x-works`, …). That combination breaks all
+three servers on such a host, in a specific way worth recognizing:
+
+- The sandbox root usually contains only install artifacts (an npm cache) — the directories the
+  allowlist names **were never created or mounted**, so every path is a phantom.
+- The servers' own config (`~/.x-agint/**/config.json`) and the user-env file it reads resolve under
+  the same virtual HOME, so they come up empty or absent.
+- A request then fails with `Access denied - parent directory outside allowed directories` — the
+  nearest *existing* ancestor (the sandbox root) is not in the allowlist, only its non-existent
+  children are. This is by design: an allowlist authorizes a directory **tree**, and validating an
+  unanchored phantom path would let any caller materialize directories anywhere.
+
+Two fixes, in order of preference:
+
+1. **Connect over HTTP instead of letting the host spawn the server.** A PM2-resident instance runs
+   in the real environment with the real config; the host's HOME games cannot reach it (see "HTTP
+   instead of stdio" above, and note that MCP roots offered at handshake replace the allowlist —
+   configure them on the server side or not at all).
+2. **Pin the config to a real absolute path** when you must use the spawn form:
+
+```bash
+npx @x-agint/filesystem --config-path /Users/<you>/.x-agint/filesystem/<host>-config.json
+```
+
+with `allowedDirectories` written as real paths. The allowlist merges with the user-env file when
+that resolves, so real absolute entries are what make it work. Verify by reading the server's start
+log: it prints the effective allowed directories — if they are all real paths on disk, the sandbox
+no longer matters.
+
 ---
 
 ## Benchmarks
