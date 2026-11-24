@@ -461,6 +461,7 @@ For a machine you reach over a network rather than a process you spawn:
   "mcpServers": {
     "remote-box": {
       "url": "https://<host>/fs/mcp",
+      // headers required only when the server sets mcpAuthToken; omit it otherwise
       "headers": { "X-MCP-Endpoint": "<mcpAuthToken>" }
     }
   }
