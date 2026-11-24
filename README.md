@@ -460,15 +460,15 @@ For a machine you reach over a network rather than a process you spawn:
 {
   "mcpServers": {
     "remote-box": {
-      "url": "https://<host>/fs/mcp",
-      // headers required only when the server sets mcpAuthToken; omit it otherwise
-      "headers": { "X-MCP-Endpoint": "<mcpAuthToken>" }
+      "url": "https://<host>/fs/mcp"
     }
   }
 }
 ```
 
-Note the header name: **`X-MCP-Endpoint`**, not `Authorization: Bearer`. A token never changes what
+A server only demands auth when you set `mcpAuthToken` on it — the default config sets none, so a plain
+`url` connect works out of the box (loopback). When you do set one, every request must carry it in an
+**`X-MCP-Endpoint`** header, not `Authorization: Bearer`. A token never changes what
 is bound — set `mcpHost` explicitly, keep the primary instance on `127.0.0.1`, and put a
 TLS-terminating proxy in front (this repo's own setup uses `tailscale serve`, tailnet-only).
 
