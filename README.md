@@ -460,14 +460,16 @@ For a machine you reach over a network rather than a process you spawn:
 {
   "mcpServers": {
     "remote-box": {
-      "url": "https://<host>/fs/mcp"
+      "url": "http://<host>:3061/mcp"
     }
   }
 }
 ```
 
-Set `mcpHost` explicitly, keep the primary instance on `127.0.0.1`, and put a
-TLS-terminating proxy in front (this repo's own setup uses `tailscale serve`, tailnet-only).
+The default filesystem HTTP endpoint is `http://127.0.0.1:3061/mcp` (bashsystem and browser each use
+their own port — see their pages). Set `mcpHost` explicitly, keep the primary instance on `127.0.0.1`,
+and put a TLS-terminating proxy in front when exposing it beyond loopback (this repo's own setup uses
+`tailscale serve`, which mounts instances under a path like `/fs/mcp`).
 
 The allowlist is enforced **on the machine the server runs on**. Nothing a client sends widens it.
 
